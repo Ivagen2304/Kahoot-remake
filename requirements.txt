@@ -1,0 +1,7 @@
+Django>=4.2
+djangorestframework
+channels
+psycopg2-binary
+channels_redis   # тільки якщо плануєш Redis (prod / масштабування)
+gunicorn         # для деплою (опціонально)
+python-dotenv    # для зчитування .env (опційно)
