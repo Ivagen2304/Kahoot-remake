@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ quiz.title }}</h2>
+<p>{{ quiz.description }}</p>
+
+<h3>Питання</h3>
+
+<ul>
+    {% for q in questions %}
+        <li>{{ q.text }} ({{ q.time_limit }} сек)</li>
+    {% empty %}
+        <li>Питань поки немає</li>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'add_question' quiz.id %}">➕ Додати питання</a>
+<br><br>
+<a href="{% url 'create_session' quiz.id %}">▶ Запустити гру</a>
+
+{% endblock %}

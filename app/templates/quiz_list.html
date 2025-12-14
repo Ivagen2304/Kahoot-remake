@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Мої вікторини{% endblock %}
+
+{% block content %}
+<h2>Мої вікторини</h2>
+
+<a href="{% url 'create_quiz' %}">➕ Створити вікторину</a>
+
+<ul>
+    {% for quiz in quizzes %}
+        <li>
+            <strong>{{ quiz.title }}</strong>
+            —
+            <a href="{% url 'quiz_detail' quiz.id %}">відкрити</a>
+        </li>
+    {% empty %}
+        <li>У вас ще немає вікторин</li>
+    {% endfor %}
+</ul>
+{% endblock %}

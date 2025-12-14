@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Ви — хост гри</h2>
+
+<p>Код гри:</p>
+<h1>{{ session.code }}</h1>
+
+<p>Гравці:</p>
+<ul>
+    {% for player in session.players.all %}
+        <li>{{ player.name }} ({{ player.score }} балів)</li>
+    {% empty %}
+        <li>Поки ніхто не підключився</li>
+    {% endfor %}
+</ul>
+
+<p>Очікуємо гравців...</p>
+{% endblock %}
