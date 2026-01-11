@@ -1,20 +1,56 @@
-{% extends "base.html" %}
-{% block title %}Мої вікторини{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Kahoot-remake{% endblock %}</title>
+    <style>
+        body{
+            margin: 0;
+            height: 100vh;
+            background-image: url("{% static 'Home_bg.png' %}");
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
 
-{% block content %}
-<h2>Мої вікторини</h2>
+        h1 {
+            margin-bottom: 800px;
+            margin-left: 80px;
+            font-size: 25px;
+        }
 
-<a href="{% url 'create_quiz' %}">➕ Створити вікторину</a>
+        li {
+            margin-bottom: 600px;
+            margin-left: -420px;
+            font-size: 25px;
+        }
 
-<ul>
-    {% for quiz in quizzes %}
-        <li>
-            <strong>{{ quiz.title }}</strong>
-            —
-            <a href="{% url 'quiz_detail' quiz.id %}">відкрити</a>
-        </li>
-    {% empty %}
-        <li>У вас ще немає вікторин</li>
-    {% endfor %}
-</ul>
-{% endblock %}
+        a {
+            margin-bottom: 800px;
+            margin-left: 50px;
+            font-size: 25px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Мої вікторини</h1>
+
+    <a href="{% url 'create_quiz' %}">➕ Створити вікторину</a>
+
+    <ul>
+        {% for quiz in quizzes %}
+            <li>
+                <strong>{{ quiz.title }}</strong>
+                —
+                <a href="{% url 'quiz_detail' quiz.id %}">відкрити</a>
+            </li>
+        {% empty %}
+            <li>У вас ще немає вікторин</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

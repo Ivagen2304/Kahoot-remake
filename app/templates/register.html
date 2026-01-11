@@ -1,0 +1,95 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Реєстрація</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-image: url("{% static 'Home_bg.png' %}");
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .box {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 40px;
+            border-radius: 15px;
+            width: 320px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h4 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2bff01;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2>Реєстрація</h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- ГЛОБАЛЬНІ ПОМИЛКИ -->
+        {% if form.non_field_errors %}
+            <div style="color: #ff8080; margin-bottom: 15px;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <!-- USERNAME -->
+         <h4>Ім'я користувача</h4>
+        {{ form.username }}
+        {% for error in form.username.errors %}
+            <div style="color: #ff8080;">{{ error }}</div>
+        {% endfor %}
+
+        <!-- PASSWORD 1 -->
+         <h4>Пароль</h4>
+        {{ form.password1 }}
+        {% for error in form.password1.errors %}
+            <div style="color: #ff8080;">{{ error }}</div>
+        {% endfor %}
+
+        <!-- PASSWORD 2 -->
+         <h4>Підтвердження пароля</h4>
+        {{ form.password2 }}
+        {% for error in form.password2.errors %}
+            <div style="color: #ff8080;">{{ error }}</div>
+        {% endfor %}
+
+        <button type="submit">Зареєструватися</button>
+    </form>
+</div>
+</body>
+</html>

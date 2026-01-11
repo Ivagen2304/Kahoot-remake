@@ -3,15 +3,55 @@ import random
 import string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout
 from .models import Quiz, Question, AnswerOption, GameSession, Player
-from .forms import QuizForm, QuestionForm, AnswerOptionForm, JoinGameForm
+from .forms import QuizForm, QuestionForm, AnswerOptionForm, JoinGameForm, RegisterForm, AuthenticationForm
 
 
 def generate_code(length=6):
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
 
-@login_required
+def home(request):
+    return render(request, "home.html")
+
+
+def register(request):
+    if request.method == "POST":
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("create_quiz")
+        else:
+            print(form.errors)
+    else:
+        form = RegisterForm()
+
+    return render(request, "register.html", {"form": form})
+
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect("create_quiz")  # вже залогінений
+
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect("create_quiz")
+    else:
+        form = AuthenticationForm()
+
+    return render(request, "login.html", {"form": form})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect("home")
+
+
 def quiz_list(request):
     quizzes = Quiz.objects.filter(owner=request.user)
     return render(request, "quiz_list.html", {"quizzes": quizzes})

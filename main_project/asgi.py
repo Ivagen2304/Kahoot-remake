@@ -1,27 +1,22 @@
-"""
-ASGI config for main_project project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
-"""
-
 import os
+
+# 1️⃣ налаштування Django ПЕРШИМ
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main_project.settings")
+
+# 2️⃣ імпортуємо get_asgi_application
 from django.core.asgi import get_asgi_application
+
+# 3️⃣ Створюємо базове ASGI application для HTTP
+django_asgi_app = get_asgi_application()
+
+# 4️⃣ Імпортуємо Channels і routing ЛИШЕ ПІСЛЯ цього
 from channels.routing import ProtocolTypeRouter, URLRouter
-import django
+import app.routing
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
-django.setup()
-from channels.auth import AuthMiddlewareStack
-import app.routing  # створимо згодом
-
+# 5️⃣ Створюємо фінальний ASGI application
 application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-    "websocket": AuthMiddlewareStack(
-        URLRouter(
-            app.routing.websocket_urlpatterns
-        )
+    "http": django_asgi_app,
+    "websocket": URLRouter(
+        app.routing.websocket_urlpatterns
     ),
 })

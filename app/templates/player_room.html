@@ -7,3 +7,13 @@
 
 <p>Очікуйте початку гри...</p>
 {% endblock %}
+<script>
+const code = "{{ session.code }}";
+const socket = new WebSocket(
+    "ws://" + window.location.host + "/ws/game/" + code + "/"
+);
+
+socket.onopen = () => {
+    socket.send(JSON.stringify({ action: "join" }));
+};
+</script>

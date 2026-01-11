@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "app",
 ]
 
-ASGI_APPLICATION = "Kahoot_remake.asgi.application"
+ASGI_APPLICATION = "main_project.asgi.application"
 
 CHANNEL_LAYERS = {
     "default": {
@@ -60,6 +60,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+APPEND_SLASH = False
+
 ROOT_URLCONF = 'main_project.urls'
 
 TEMPLATES = [
@@ -69,6 +71,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',

@@ -1,13 +1,18 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Kahoot-remake{% endblock %}</title>
+</head>
+<body>
 <h2>Ви — хост гри</h2>
 
 <p>Код гри:</p>
 <h1>{{ session.code }}</h1>
 
 <p>Гравці:</p>
-<ul>
+<ul id="players">
     {% for player in session.players.all %}
         <li>{{ player.name }} ({{ player.score }} балів)</li>
     {% empty %}
@@ -16,4 +21,82 @@
 </ul>
 
 <p>Очікуємо гравців...</p>
-{% endblock %}
+
+{% if request.user == session.host %}
+<button id="startBtn" onclick="startGame()">Почати гру</button>
+{% endif %}
+
+<div id="question" style="margin-top: 30px; font-size: 24px;"></div>
+<p>Ти: {{ request.user }}</p>
+<p>Host: {{ session.host }}</p>
+<p>Authenticated: {{ request.user.is_authenticated }}</p>
+<p>Session code: {{ session.code }}</p>
+<script>
+window.addEventListener("load", () => {
+    const code = "{{ session.code }}";  // Переконайся, що це не порожнє
+    const startBtn = document.getElementById("startBtn"); // твоя кнопка
+    const nameInput = document.getElementById("nameInput"); // поле для імені
+    const playersList = document.getElementById("players"); // ul для гравців
+    const questionBox = document.getElementById("question"); // div або p для питання
+
+    // Створюємо WebSocket
+    const socket = new WebSocket("ws://" + window.location.host + "/ws/game/" + code + "/");
+
+
+    // Коли підключення відкрите
+    socket.onopen = () => {
+        console.log("WebSocket connected");
+        if(startBtn) startBtn.disabled = false; // Кнопка активна тільки після підключення
+    };
+
+    // Обробка повідомлень від сервера
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("WS MESSAGE:", data);
+
+        if(data.type === "players" && playersList) {
+            playersList.innerHTML = "";
+            data.players.forEach(name => {
+                const li = document.createElement("li");
+                li.textContent = name;
+                playersList.appendChild(li);
+            });
+        }
+
+        if(data.type === "question" && questionBox) {
+            questionBox.innerText = data.text;
+        }
+
+        if(data.type === "game_started") {
+            console.log("GAME STARTED");
+            // Тут можна робити редірект або показати питання
+        }
+    };
+
+    socket.onclose = () => console.log("WebSocket CLOSED");
+    socket.onerror = (e) => console.error("WebSocket ERROR", e);
+
+    // Функція приєднання гравця
+    window.joinGame = function() {
+        if(!nameInput || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+        socket.send(JSON.stringify({
+            type: "join",
+            name: nameInput.value
+        }));
+    };
+
+    // Функція старту гри (глобальна)
+    window.startGame = function() {
+        if(!socket || socket.readyState !== WebSocket.OPEN) {
+            console.log("WebSocket not open yet");
+            return;
+        }
+
+        console.log("START GAME CLICK");
+        socket.send(JSON.stringify({ type: "start_game" }));
+    };
+});
+</script>
+</body>
+</html>

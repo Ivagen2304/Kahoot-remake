@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Kahoot-remake</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-image: url("{% static 'Home_bg.png' %}");
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 40px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+
+        .btn-register {
+            background-color: #3cff00;
+            color: #000;
+        }
+
+        .btn-main_page {
+            background-color: #3cff00;
+            color: #000;
+        }
+
+        .btn-login {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .btn-guest {
+            background-color: #ffcc00;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 Kahoot-remake! 🎉</h1>
+
+        <div class="buttons">
+            {% if request.user.is_authenticated %}
+
+                <a href="{% url 'quiz_list' %}">
+                    <button class="btn btn-main_page">Головна</button>
+                </a>
+
+                <a href="{% url 'join_game' %}">
+                    <button class="btn btn-guest">Зайти як гість</button>
+                </a>
+
+            {% else %}
+
+                <a href="{% url 'login' %}">
+                    <button class="btn btn-login">Увійти</button>
+                </a>
+
+                <a href="{% url 'register' %}">
+                    <button class="btn btn-register">Зареєструватися</button>
+                </a>
+
+                <a href="{% url 'join_game' %}">
+                    <button class="btn btn-guest">Зайти як гість</button>
+                </a>
+
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

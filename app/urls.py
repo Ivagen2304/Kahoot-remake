@@ -2,7 +2,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.quiz_list, name="quiz_list"),
+    path("", views.home, name="home"),
+    path("register/", views.register, name="register"),
+    path("login/", views.login_view, name="login"),
+    path("logout/", views.logout_view, name="logout"),
+    path("quiz/list/", views.quiz_list, name="quiz_list"),
     path("quiz/create/", views.create_quiz, name="create_quiz"),
     path("quiz/<int:quiz_id>/", views.quiz_detail, name="quiz_detail"),
     path("quiz/<int:quiz_id>/add-question/", views.add_question, name="add_question"),

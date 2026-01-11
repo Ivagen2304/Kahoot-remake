@@ -1,5 +1,20 @@
 from django import forms
 from .models import Quiz, Question, AnswerOption, GameSession, Player
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+
+
+class RegisterForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ("username", "password1", "password2")
+
+        labels = {
+            "username": "Ім'я користувача",
+            "password1": "Пароль",
+            "password2": "Підтвердження пароля",
+        }
+
 
 
 class QuizForm(forms.ModelForm):
