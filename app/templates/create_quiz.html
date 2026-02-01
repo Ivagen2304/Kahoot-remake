@@ -1,6 +1,23 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Kahoot-remake{% endblock %}</title>
+    <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
+    <style>
+        body {
+            margin: 1;
+            height: 100vh;
+            background-image: url("{% static 'Home_bg.png' %}");
+            background-size: cover;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+    </style>
+</head>
+<body>
 <h2>Створити вікторину</h2>
 
 <form method="post">
@@ -8,4 +25,5 @@
     {{ form.as_p }}
     <button type="submit">Створити</button>
 </form>
-{% endblock %}
+</body>
+</html>

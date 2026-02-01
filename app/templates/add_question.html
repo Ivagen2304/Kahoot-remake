@@ -1,13 +1,81 @@
-{% extends "base.html" %}
-
-{% block content %}
-<h2>Додати питання</h2>
-<p>Вікторина: <strong>{{ quiz.title }}</strong></p>
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Kahoot-remake{% endblock %}</title>
+    <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-image: url("{% static 'Home_bg.png' %}");
+            background-size: cover;
+            display: flex;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+    </style>
+</head>
+<body>
 
 <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Зберегти</button>
+    <p>Вікторина: <strong>{{ quiz.title }}</strong></p>
+
+    {{ qform.as_p }}
+
+    <h3>Варіанти відповіді</h3>
+
+    <div id="answers-formset">
+        {{ formset.management_form }}
+
+        {% for form in formset %}
+            <div class="answer-form">
+                {{ form.as_p }}
+            </div>
+        {% endfor %}
+    </div>
+
+    <button type="button" id="add-answer-btn">
+        ➕ Додати варіант відповіді
+    </button>
+
+    <br><br>
+    <button type="submit">Зберегти питання</button>
+    <input type="hidden" id="id_answeroption_set-TOTAL_FORMS" value="3">
 </form>
 
-{% endblock %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const addBtn = document.getElementById("add-answer-btn");
+    const formsetDiv = document.getElementById("answers-formset");
+    const totalForms = document.getElementById("id_answeroption_set-TOTAL_FORMS");
+
+    addBtn.addEventListener("click", function () {
+        const currentCount = parseInt(totalForms.value);
+
+        // Беремо першу форму як шаблон
+        const firstForm = document.querySelector(".answer-form");
+        const newForm = firstForm.cloneNode(true);
+
+        // Очищаємо значення
+        newForm.querySelectorAll("input").forEach(input => {
+            input.value = "";
+            input.checked = false;
+
+            const name = input.name.replace(/-\d+-/, `-${currentCount}-`);
+            const id = input.id.replace(/-\d+-/, `-${currentCount}-`);
+
+            input.name = name;
+            input.id = id;
+        });
+
+        formsetDiv.appendChild(newForm);
+        totalForms.value = currentCount + 1;
+    });
+});
+</script>
+
+</body>
+</html>

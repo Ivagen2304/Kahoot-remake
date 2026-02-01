@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Kahoot-remake</title>
+    <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
     <style>
         body {
             margin: 0;
@@ -15,33 +16,27 @@
             align-items: center;
             font-family: Arial, sans-serif;
             color: white;
+            position: relative;
         }
 
-        .container {
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 48px;
-            margin-bottom: 40px;
-        }
-
-        .buttons {
+        .top-buttons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
             display: flex;
-            gap: 20px;
-            justify-content: center;
+            gap: 10px;
         }
 
-        .btn {
-            padding: 15px 30px;
-            font-size: 18px;
+        .top-btn {
+            padding: 8px 16px;
+            font-size: 14px;
             border: none;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
             transition: transform 0.2s, opacity 0.2s;
         }
 
-        .btn:hover {
+        .top-btn:hover {
             transform: scale(1.05);
             opacity: 0.9;
         }
@@ -65,39 +60,86 @@
             background-color: #ffcc00;
             color: #000;
         }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 40px;
+        }
+
+        .code-input {
+            padding: 20px;
+            font-size: 30px;
+            width: 400px;
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 8px;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .code-input::placeholder {
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        .find-btn {
+            padding: 20px 40px;
+            font-size: 20px;
+            background-color: #3cff00;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .find-btn:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
+    <div class="top-buttons">
+        {% if request.user.is_authenticated %}
+
+            <a href="{% url 'quiz_list' %}">
+                <button class="top-btn btn-main_page">На головну</button>
+            </a>
+
+            <a href="{% url 'join_game' %}">
+                <button class="top-btn btn-guest">Зайти як гість</button>
+            </a>
+
+        {% else %}
+
+            <a href="{% url 'login' %}">
+                <button class="top-btn btn-login">Увійти</button>
+            </a>
+
+            <a href="{% url 'register' %}">
+                <button class="top-btn btn-register">Зареєструватися</button>
+            </a>
+
+            <a href="{% url 'join_game' %}">
+                <button class="top-btn btn-guest">Зайти як гість</button>
+            </a>
+
+        {% endif %}
+    </div>
+
     <div class="container">
         <h1>🎉 Kahoot-remake! 🎉</h1>
 
-        <div class="buttons">
-            {% if request.user.is_authenticated %}
-
-                <a href="{% url 'quiz_list' %}">
-                    <button class="btn btn-main_page">Головна</button>
-                </a>
-
-                <a href="{% url 'join_game' %}">
-                    <button class="btn btn-guest">Зайти як гість</button>
-                </a>
-
-            {% else %}
-
-                <a href="{% url 'login' %}">
-                    <button class="btn btn-login">Увійти</button>
-                </a>
-
-                <a href="{% url 'register' %}">
-                    <button class="btn btn-register">Зареєструватися</button>
-                </a>
-
-                <a href="{% url 'join_game' %}">
-                    <button class="btn btn-guest">Зайти як гість</button>
-                </a>
-
-            {% endif %}
-        </div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="code" class="code-input" placeholder="Код вікторини" maxlength="6" required>
+            <br>
+            <button type="submit" class="find-btn">Знайти</button>
+        </form>
     </div>
 </body>
 </html>

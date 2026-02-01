@@ -4,17 +4,28 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Kahoot-remake{% endblock %}</title>
+    <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
+    <style>
+        body {
+            margin: 1;
+            height: 100vh;
+            background-image: url("{% static 'Home_bg.png' %}");
+            background-size: cover;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+    </style>
 </head>
 <body>
 <h2>Ви — хост гри</h2>
 
-<p>Код гри:</p>
-<h1>{{ session.code }}</h1>
+<p>Код гри: {{ session.code }}</p>
 
 <p>Гравці:</p>
 <ul id="players">
     {% for player in session.players.all %}
-        <li>{{ player.name }} ({{ player.score }} балів)</li>
+        <li>{{ player.name }}</li>
     {% empty %}
         <li>Поки ніхто не підключився</li>
     {% endfor %}
@@ -23,24 +34,26 @@
 <p>Очікуємо гравців...</p>
 
 {% if request.user == session.host %}
-<button id="startBtn" onclick="startGame()">Почати гру</button>
+<button type="button" onclick="onStartClick()">Почати гру</button>
 {% endif %}
 
 <div id="question" style="margin-top: 30px; font-size: 24px;"></div>
-<p>Ти: {{ request.user }}</p>
-<p>Host: {{ session.host }}</p>
-<p>Authenticated: {{ request.user.is_authenticated }}</p>
-<p>Session code: {{ session.code }}</p>
+
 <script>
 window.addEventListener("load", () => {
     const code = "{{ session.code }}";  // Переконайся, що це не порожнє
+    const playerName = "{{ request.user.username|default:'Host' }}";
     const startBtn = document.getElementById("startBtn"); // твоя кнопка
     const nameInput = document.getElementById("nameInput"); // поле для імені
     const playersList = document.getElementById("players"); // ul для гравців
     const questionBox = document.getElementById("question"); // div або p для питання
 
+    let playersInLobby = [];
+
     // Створюємо WebSocket
-    const socket = new WebSocket("ws://" + window.location.host + "/ws/game/" + code + "/");
+    const socket = new WebSocket(
+        "ws://" + window.location.host + "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName)
+    );
 
 
     // Коли підключення відкрите
@@ -50,9 +63,16 @@ window.addEventListener("load", () => {
     };
 
     // Обробка повідомлень від сервера
-    socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        console.log("WS MESSAGE:", data);
+    socket.onmessage = function (event) {
+    console.log("RAW MESSAGE:", event.data);
+
+    const data = JSON.parse(event.data);
+    console.log("PARSED:", data);
+
+    if (data.type === "players") {
+        playersInLobby = data.players; // ← ОЦЕ ГОЛОВНЕ
+        console.log("Players in lobby:", playersInLobby.length);
+    }
 
         if(data.type === "players" && playersList) {
             playersList.innerHTML = "";
@@ -63,9 +83,6 @@ window.addEventListener("load", () => {
             });
         }
 
-        if(data.type === "question" && questionBox) {
-            questionBox.innerText = data.text;
-        }
 
         if(data.type === "game_started") {
             console.log("GAME STARTED");
@@ -76,16 +93,6 @@ window.addEventListener("load", () => {
     socket.onclose = () => console.log("WebSocket CLOSED");
     socket.onerror = (e) => console.error("WebSocket ERROR", e);
 
-    // Функція приєднання гравця
-    window.joinGame = function() {
-        if(!nameInput || !socket || socket.readyState !== WebSocket.OPEN) return;
-
-        socket.send(JSON.stringify({
-            type: "join",
-            name: nameInput.value
-        }));
-    };
-
     // Функція старту гри (глобальна)
     window.startGame = function() {
         if(!socket || socket.readyState !== WebSocket.OPEN) {
@@ -95,6 +102,16 @@ window.addEventListener("load", () => {
 
         console.log("START GAME CLICK");
         socket.send(JSON.stringify({ type: "start_game" }));
+    };
+
+    window.onStartClick = function () {
+        if (!playersInLobby || playersInLobby.length < 1) {
+            alert("Недостатня кількість гравців для початку (мінімальна кількість 1)");
+            return;
+        }
+
+        startGame();
+        console.log("GAME STARTED");
     };
 });
 </script>

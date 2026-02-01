@@ -1,19 +1,34 @@
-{% extends "base.html" %}
-
-{% block title %}Вхід{% endblock %}
-
-{% block content %}
-<h2>Вхід</h2>
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Kahoot-remake</title>
+    <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-image: url("{% static 'Home_bg.png' %}");
+            background-size: cover;
+            display: flex;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+    </style>
+</head>
+<body>
 
 <form method="post">
     {% csrf_token %}
+    <h2>Вхід</h2>
 
-    {{ form.username }}
+    <h2>Логін: {{ form.username }}</h2>
     {% for error in form.username.errors %}
         <div style="color:red;">{{ error }}</div>
     {% endfor %}
 
-    {{ form.password }}
+    <h2>Пароль: {{ form.password }}</h2>
     {% for error in form.password.errors %}
         <div style="color:red;">{{ error }}</div>
     {% endfor %}
@@ -26,4 +41,5 @@
 
     <button type="submit">Увійти</button>
 </form>
-{% endblock %}
+</body>
+</html>

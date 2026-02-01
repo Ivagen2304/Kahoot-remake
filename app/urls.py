@@ -14,6 +14,8 @@ urlpatterns = [
     path("quiz/<int:quiz_id>/start/", views.create_session, name="create_session"),
 
     path("join/", views.join_game, name="join_game"),
+    path("enter/<str:code>/", views.enter_nickname, name="enter_nickname"),
     path("host/<str:code>/", views.host_room, name="host_room"),
-    path("play/<str:code>/", views.player_room, name="player_room"),
+    path("lobby/<str:code>/", views.player_room, name="player_room"),
+    path("play/<str:code>/", views.test_play, name="test_play"),
 ]

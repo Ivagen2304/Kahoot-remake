@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from .models import Quiz, Question, AnswerOption, GameSession, Player
-from .forms import QuizForm, QuestionForm, AnswerOptionForm, JoinGameForm, RegisterForm, AuthenticationForm
+from .forms import QuizForm, QuestionForm, AnswerOptionForm, AnswerOptionFormSet, JoinGameForm, RegisterForm, AuthenticationForm
 
 
 def generate_code(length=6):
@@ -13,6 +13,11 @@ def generate_code(length=6):
 
 
 def home(request):
+    if request.method == 'POST':
+        code = request.POST.get('code')
+        if code:
+            session = get_object_or_404(GameSession, code=code.upper(), is_active=True)
+            return redirect("enter_nickname", code=code.upper())
     return render(request, "home.html")
 
 
@@ -83,17 +88,20 @@ def quiz_detail(request, quiz_id):
 def add_question(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
 
-    if request.method == "POST":
-        form = QuestionForm(request.POST)
-        if form.is_valid():
-            question = form.save(commit=False)
+    if request.method == 'POST':
+        qform = QuestionForm(request.POST)
+        formset = AnswerOptionFormSet(request.POST)
+        if qform.is_valid() and formset.is_valid():
+            question = qform.save(commit=False)
             question.quiz = quiz
             question.save()
-            return redirect("quiz_detail", quiz.id)
+            formset.instance = question
+            formset.save()
+            return redirect('quiz_detail', quiz_id=quiz.id)  # можна додавати ще
     else:
-        form = QuestionForm()
-
-    return render(request, "add_question.html", {"form": form, "quiz": quiz})
+        qform = QuestionForm()
+        formset = AnswerOptionFormSet()
+    return render(request, 'add_question.html', {'qform': qform, 'formset': formset, 'quiz': quiz})
 
 
 @login_required
@@ -124,6 +132,7 @@ def join_game(request):
             )
 
             request.session["player_id"] = player.id
+            request.session["player_name"] = name
             return redirect("player_room", session.code)
     else:
         form = JoinGameForm()
@@ -139,4 +148,23 @@ def host_room(request, code):
 
 def player_room(request, code):
     session = get_object_or_404(GameSession, code=code)
-    return render(request, "player_room.html", {"session": session})
+    player_name = ""
+    if "player_id" in request.session:
+        player = Player.objects.filter(id=request.session["player_id"], session=session).first()
+        if player:
+            player_name = player.name
+    return render(request, "player_room.html", {"session": session, "player_name": player_name})
+
+def enter_nickname(request, code):
+    session = get_object_or_404(GameSession, code=code, is_active=True)
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        if name:
+            player = Player.objects.create(session=session, name=name)
+            request.session["player_id"] = player.id
+            return redirect("player_room", code)
+    return render(request, "join_nickname.html", {"code": code})
+
+def test_play(request, code):
+    session = get_object_or_404(GameSession, code=code)
+    return render(request, "test_play.html", {"code": code, "session": session})

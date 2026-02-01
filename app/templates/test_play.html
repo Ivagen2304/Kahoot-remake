@@ -1,0 +1,213 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Гра почалась</title>
+    <link rel="icon" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico">
+    <style>
+        body {
+            height: 100vh;
+            background-image: url("{% static 'Home_bg.png' %}");
+            background-size: cover;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        button {
+            margin: 10px;
+            padding: 15px 30px;
+            font-size: 18px;
+        }
+
+        #waitingBox {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            background: black; /* щоб не було порожніх країв */
+            z-index: 9999;
+        }
+
+        #waitingBox img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* 🔥 НЕ збільшує гіф */
+            display: block;
+        }
+
+        /* Текст поверх */
+        .waiting-text {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            text-align: center;
+
+            text-shadow: 0 0 10px black;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px 30px;
+            border-radius: 12px;
+        }
+
+        #answerCounter {
+            margin-top: 15px;
+            font-size: 1.4rem;
+            opacity: 0.9;
+        }
+
+    </style>
+</head>
+
+<body data-code="{{ session.code }}">
+
+<h1>Вікторина розпочалась</h1>
+<p id="questionCounter"></p>
+
+<div id="questionBox">
+    <h2 id="questionText"></h2>
+
+    <img id="questionImage" style="display:none; max-width:400px;">
+    <video id="questionVideo" controls style="display:none; max-width:400px;"></video>
+</div>
+
+<div id="answersBox"></div>
+
+<div id="waitingBox" style="display:none;">
+    <img src="{% static 'waiting.gif' %}"/>
+    
+    <div class="waiting-text">
+        Чекаємо, поки інші гравці дадуть відповідь...
+        <div id="answerCounter">0 / 0</div>
+    </div>
+</div>
+
+
+<div id="resultsBox" style="display:none;">
+    <h2>Результати</h2>
+    <table align="center">
+        <thead>
+            <tr>
+                <th>Гравець</th>
+                <th>Результат</th>
+            </tr>
+        </thead>
+        <tbody id="resultsTable"></tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+    const code = "{{ session.code }}";
+    let storedName = localStorage.getItem("player_name");
+    const playerName = (storedName && storedName !== "null") ? storedName : "";
+
+    let redirected = false;  // 👈 ФЛАГ
+
+    const questionText = document.getElementById("questionText");
+    const answersBox = document.getElementById("answersBox");
+    const waitingBox = document.getElementById("waitingBox");
+    const resultsBox = document.getElementById("resultsBox");
+    const resultsTable = document.getElementById("resultsTable");
+
+    const socket = new WebSocket(
+        "ws://" + window.location.host + "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName)
+    );
+
+    socket.onopen = () => {
+        console.log("Socket opened on game page");
+        // 👇 ЗАПРОСИ ТЕКУЩИЙ ВОПРОС
+        socket.send(JSON.stringify({
+            type: "get_current_question"
+        }));
+    };
+
+    socket.onmessage = (event) => {
+        console.log("WebSocket connected");
+        const data = JSON.parse(event.data);
+        console.log(data);
+
+        if (data.type === "question") {
+             // Показати питання
+            const questionText = document.getElementById("questionText");
+            questionText.innerText = data.text;
+
+            // Показати кнопки відповідей
+            const answersBox = document.getElementById("answersBox");
+            answersBox.innerHTML = ""; // очищаємо старі кнопки
+
+            data.options.forEach(answer => {
+                const btn = document.createElement("button");
+                btn.innerText = answer.text;
+
+                // При натисканні на кнопку — відправляємо відповідь
+                btn.onclick = () => sendAnswer(answer.id);
+
+                answersBox.appendChild(btn);
+            });
+        }
+
+        if (data.type === "redirect") {
+            if (!redirected) {  // 👈 ПРОВЕРЯЕМ ФЛАГ
+                redirected = true;
+                window.location.href = data.url;
+                return;  // 👈 ВЫХОДИМ
+            }
+        }
+
+        if (data.type === "waiting") {
+            showWaiting();
+        }
+
+        if (data.type === "results") {
+            showResults(data.results);
+        }
+
+        if (data.type === "answers_count") {
+            document.getElementById("answerCounter").innerText =
+                `${data.answered} / ${data.total}`;
+        }
+    };
+
+    function sendAnswer(option_id) {
+        if (socket.readyState !== WebSocket.OPEN) return;
+
+        socket.send(JSON.stringify({
+            type: "answer",
+            option_id: option_id
+        }));
+
+        // ховаємо кнопки
+        document.getElementById("questionBox").style.display = "none";
+        document.getElementById("answersBox").style.display = "none";
+
+        // показуємо очікування
+        document.getElementById("waitingBox").style.display = "block";
+    }
+
+    function showWaiting() {
+        answersBox.innerHTML = "";
+        waitingBox.style.display = "block";
+    }
+
+    function showResults(results) {
+        waitingBox.style.display = "none";
+        resultsBox.style.display = "block";
+        resultsTable.innerHTML = "";
+
+        results.forEach(r => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${r.name}</td><td>${r.correct}/${r.total}</td>`;
+            resultsTable.appendChild(tr);
+        });
+    }
+});
+</script>
+</body>
+</html>

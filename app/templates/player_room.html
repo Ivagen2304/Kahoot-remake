@@ -1,19 +1,74 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Kahoot-remake{% endblock %}</title>
+    <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
+    <style>
+        body {
+            margin: 1;
+            height: 100vh;
+            background-image: url("{% static 'Home_bg.png' %}");
+            background-size: cover;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+    </style>
+</head>
+<body>
 <h2>Ви у грі</h2>
 
 <p>Код гри: <strong>{{ session.code }}</strong></p>
 
 <p>Очікуйте початку гри...</p>
-{% endblock %}
+
+<div id="answers"></div>
+
 <script>
 const code = "{{ session.code }}";
+let storedName = localStorage.getItem("player_name");
+const playerName = "{{ player_name|default:'' }}" || (storedName && storedName !== "null" ? storedName : null) || "Player";
+
 const socket = new WebSocket(
-    "ws://" + window.location.host + "/ws/game/" + code + "/"
+    "ws://" + window.location.host +
+    "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName)
 );
 
-socket.onopen = () => {
-    socket.send(JSON.stringify({ action: "join" }));
-};
+socket.onopen = () => 
+console.log("WebSocket connected");
+socket.onerror = (e) => 
+console.error("WebSocket ERROR", e);
+
+socket.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+
+    if (data.type === "question") {
+        document.getElementById("question").innerText = data.text;
+
+        const answersDiv = document.getElementById("answers");
+        answersDiv.innerHTML = "";
+
+        data.answers.forEach(answer => {
+            const btn = document.createElement("button");
+            btn.innerText = answer.text;
+            btn.onclick = () => sendAnswer(answer.id);
+            answersDiv.appendChild(btn);
+        });
+
+    }
+
+    if (data.type === "redirect") {
+        window.location.href = data.url;
+}};
+
+function sendAnswer(answerId) {
+    socket.send(JSON.stringify({
+        type: "answer",
+        answer_id: answerId
+    }));
+}
 </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 from django import forms
 from .models import Quiz, Question, AnswerOption, GameSession, Player
+from django.forms import inlineformset_factory
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
@@ -33,6 +34,10 @@ class AnswerOptionForm(forms.ModelForm):
     class Meta:
         model = AnswerOption
         fields = ["text", "is_correct"]
+
+AnswerOptionFormSet = inlineformset_factory(
+    Question, AnswerOption, form=AnswerOptionForm, extra=2
+)
 
 
 class CreateSessionForm(forms.ModelForm):
