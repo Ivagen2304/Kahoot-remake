@@ -56,11 +56,6 @@
             color: #ffffff;
         }
 
-        .btn-guest {
-            background-color: #ffcc00;
-            color: #000;
-        }
-
         .container {
             text-align: center;
         }
@@ -107,11 +102,7 @@
         {% if request.user.is_authenticated %}
 
             <a href="{% url 'quiz_list' %}">
-                <button class="top-btn btn-main_page">На головну</button>
-            </a>
-
-            <a href="{% url 'join_game' %}">
-                <button class="top-btn btn-guest">Зайти як гість</button>
+                <button class="top-btn btn-main_page">Мої вікторини</button>
             </a>
 
         {% else %}
@@ -124,15 +115,17 @@
                 <button class="top-btn btn-register">Зареєструватися</button>
             </a>
 
-            <a href="{% url 'join_game' %}">
-                <button class="top-btn btn-guest">Зайти як гість</button>
-            </a>
-
         {% endif %}
     </div>
 
     <div class="container">
         <h1>🎉 Kahoot-remake! 🎉</h1>
+
+        {% if error %}
+            <script>
+                alert("{{ error }}");
+            </script>
+        {% endif %}
 
         <form method="post">
             {% csrf_token %}

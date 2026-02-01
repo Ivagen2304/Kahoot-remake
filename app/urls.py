@@ -10,10 +10,10 @@ urlpatterns = [
     path("quiz/create/", views.create_quiz, name="create_quiz"),
     path("quiz/<int:quiz_id>/", views.quiz_detail, name="quiz_detail"),
     path("quiz/<int:quiz_id>/add-question/", views.add_question, name="add_question"),
+    path("quiz/<int:quiz_id>/delete-question/<int:question_id>/", views.delete_question, name="delete_question"),
 
     path("quiz/<int:quiz_id>/start/", views.create_session, name="create_session"),
 
-    path("join/", views.join_game, name="join_game"),
     path("enter/<str:code>/", views.enter_nickname, name="enter_nickname"),
     path("host/<str:code>/", views.host_room, name="host_room"),
     path("lobby/<str:code>/", views.player_room, name="player_room"),

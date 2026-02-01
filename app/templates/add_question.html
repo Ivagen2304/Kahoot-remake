@@ -8,74 +8,420 @@
     <style>
         body {
             margin: 0;
-            height: 100vh;
+            min-height: 100vh;
             background-image: url("{% static 'Home_bg.png' %}");
             background-size: cover;
-            display: flex;
-            font-family: Arial, sans-serif;
+            background-position: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            margin: 0 0 15px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .quiz-info {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0;
+        }
+
+        .form-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin: 0 0 30px 0;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: "📝";
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 1rem;
+            color: white;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.8);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .answer-form {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            padding-top: 50px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .answer-number {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .remove-answer-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 25px;
+            height: 25px;
+            background: rgba(220, 53, 69, 0.8);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .remove-answer-btn:hover {
+            background: rgba(220, 53, 69, 1);
+            transform: scale(1.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-input {
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .actions-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .actions-title {
+            font-size: 1.5rem;
+            margin: 0 0 20px 0;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .actions-title::before {
+            content: "⚡";
+            font-size: 1.3rem;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 450px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: white;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .page-header,
+            .form-section,
+            .actions-section {
+                padding: 25px 20px;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
+    <a href="{% url 'quiz_detail' quiz.id %}" class="back-button">⬅️</a>
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Додати питання</h1>
+            <p class="quiz-info">Вікторина: <strong>{{ quiz.title }}</strong></p>
+        </div>
 
-<form method="post">
-    {% csrf_token %}
-    <p>Вікторина: <strong>{{ quiz.title }}</strong></p>
+        <form method="post" id="question-form">
+            {% csrf_token %}
 
-    {{ qform.as_p }}
+            <div class="form-section">
+                <h2 class="section-title">Питання</h2>
 
-    <h3>Варіанти відповіді</h3>
+                <div class="form-group">
+                    <label for="{{ qform.text.id_for_label }}" class="form-label">{{ qform.text.label }}</label>
+                    {{ qform.text }}
+                </div>
 
-    <div id="answers-formset">
-        {{ formset.management_form }}
-
-        {% for form in formset %}
-            <div class="answer-form">
-                {{ form.as_p }}
+                <div class="form-group">
+                    <label for="{{ qform.time_limit.id_for_label }}" class="form-label">{{ qform.time_limit.label }}</label>
+                    {{ qform.time_limit }}
+                </div>
             </div>
-        {% endfor %}
+
+            <div class="form-section">
+                <h2 class="section-title">Варіанти відповіді</h2>
+
+                <div id="answers-formset">
+                    {{ formset.management_form }}
+
+                    {% for form in formset %}
+                        <div class="answer-form" data-form-index="{{ forloop.counter0 }}">
+                            <span class="answer-number">{{ forloop.counter }}</span>
+                            {% if forloop.counter > 2 %}
+                                <button type="button" class="remove-answer-btn" onclick="removeAnswer(this)">×</button>
+                            {% endif %}
+
+                            <div class="form-group">
+                                <label for="{{ form.text.id_for_label }}" class="form-label">{{ form.text.label }}</label>
+                                {{ form.text }}
+                            </div>
+
+                            <div class="checkbox-group">
+                                {{ form.is_correct }}
+                                <label for="{{ form.is_correct.id_for_label }}" class="form-label">{{ form.is_correct.label }}</label>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="actions-section">
+                    <h3 class="actions-title">Дії</h3>
+                    <div class="actions-grid">
+                        <button type="button" id="add-answer-btn" class="btn btn-primary">
+                            ➕ Додати варіант відповіді
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            💾 Зберегти питання
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 
-    <button type="button" id="add-answer-btn">
-        ➕ Додати варіант відповіді
-    </button>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const addBtn = document.getElementById("add-answer-btn");
+            const formsetDiv = document.getElementById("answers-formset");
+            const totalForms = document.getElementById("id_answeroption_set-TOTAL_FORMS");
 
-    <br><br>
-    <button type="submit">Зберегти питання</button>
-    <input type="hidden" id="id_answeroption_set-TOTAL_FORMS" value="3">
-</form>
+            addBtn.addEventListener("click", function () {
+                const currentCount = parseInt(totalForms.value);
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const addBtn = document.getElementById("add-answer-btn");
-    const formsetDiv = document.getElementById("answers-formset");
-    const totalForms = document.getElementById("id_answeroption_set-TOTAL_FORMS");
+                // Беремо першу форму як шаблон
+                const firstForm = document.querySelector(".answer-form");
+                const newForm = firstForm.cloneNode(true);
 
-    addBtn.addEventListener("click", function () {
-        const currentCount = parseInt(totalForms.value);
+                // Оновлюємо номер відповіді
+                const answerNumber = newForm.querySelector(".answer-number");
+                answerNumber.textContent = currentCount + 1;
 
-        // Беремо першу форму як шаблон
-        const firstForm = document.querySelector(".answer-form");
-        const newForm = firstForm.cloneNode(true);
+                // Додаємо кнопку видалення
+                const removeBtn = document.createElement("button");
+                removeBtn.type = "button";
+                removeBtn.className = "remove-answer-btn";
+                removeBtn.innerHTML = "×";
+                removeBtn.onclick = function() { removeAnswer(this); };
+                newForm.appendChild(removeBtn);
 
-        // Очищаємо значення
-        newForm.querySelectorAll("input").forEach(input => {
-            input.value = "";
-            input.checked = false;
+                // Очищаємо значення
+                newForm.querySelectorAll("input").forEach(input => {
+                    input.value = "";
+                    input.checked = false;
 
-            const name = input.name.replace(/-\d+-/, `-${currentCount}-`);
-            const id = input.id.replace(/-\d+-/, `-${currentCount}-`);
+                    const name = input.name.replace(/-\d+-/, `-${currentCount}-`);
+                    const id = input.id.replace(/-\d+-/, `-${currentCount}-`);
 
-            input.name = name;
-            input.id = id;
+                    input.name = name;
+                    input.id = id;
+                });
+
+                // Оновлюємо атрибути label
+                newForm.querySelectorAll("label").forEach(label => {
+                    const forAttr = label.getAttribute("for");
+                    if (forAttr) {
+                        label.setAttribute("for", forAttr.replace(/-\d+-/, `-${currentCount}-`));
+                    }
+                });
+
+                // Оновлюємо data-form-index
+                newForm.setAttribute("data-form-index", currentCount);
+
+                formsetDiv.appendChild(newForm);
+                totalForms.value = currentCount + 1;
+            });
         });
 
-        formsetDiv.appendChild(newForm);
-        totalForms.value = currentCount + 1;
-    });
-});
-</script>
+        function removeAnswer(button) {
+            const form = button.closest(".answer-form");
+            const totalForms = document.getElementById("id_answeroption_set-TOTAL_FORMS");
+
+            if (parseInt(totalForms.value) > 2) {
+                form.remove();
+                totalForms.value = parseInt(totalForms.value) - 1;
+
+                // Оновлюємо номери інших форм
+                const forms = document.querySelectorAll(".answer-form");
+                forms.forEach((form, index) => {
+                    const number = form.querySelector(".answer-number");
+                    if (number) {
+                        number.textContent = index + 1;
+                    }
+                    form.setAttribute("data-form-index", index);
+                });
+            } else {
+                alert("Мінімальна кількість варіантів відповіді - 2");
+            }
+        }
+    </script>
 
 </body>
 </html>

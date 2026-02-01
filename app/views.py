@@ -13,12 +13,16 @@ def generate_code(length=6):
 
 
 def home(request):
+    error = None
     if request.method == 'POST':
         code = request.POST.get('code')
         if code:
-            session = get_object_or_404(GameSession, code=code.upper(), is_active=True)
-            return redirect("enter_nickname", code=code.upper())
-    return render(request, "home.html")
+            try:
+                session = GameSession.objects.get(code=code.upper(), is_active=True)
+                return redirect("enter_nickname", code=code.upper())
+            except GameSession.DoesNotExist:
+                error = f"Вікторину з кодом {code.upper()} не знайдено"
+    return render(request, "home.html", {"error": error})
 
 
 def register(request):
@@ -118,28 +122,6 @@ def create_session(request, quiz_id):
     return redirect("host_room", session.code)
 
 
-def join_game(request):
-    if request.method == "POST":
-        form = JoinGameForm(request.POST)
-        if form.is_valid():
-            name = form.cleaned_data["name"]
-            code = form.cleaned_data["code"]
-
-            session = get_object_or_404(GameSession, code=code, is_active=True)
-            player = Player.objects.create(
-                session=session,
-                name=name
-            )
-
-            request.session["player_id"] = player.id
-            request.session["player_name"] = name
-            return redirect("player_room", session.code)
-    else:
-        form = JoinGameForm()
-
-    return render(request, "join_game.html", {"form": form})
-
-
 @login_required
 def host_room(request, code):
     session = get_object_or_404(GameSession, code=code)
@@ -168,3 +150,11 @@ def enter_nickname(request, code):
 def test_play(request, code):
     session = get_object_or_404(GameSession, code=code)
     return render(request, "test_play.html", {"code": code, "session": session})
+
+
+@login_required
+def delete_question(request, quiz_id, question_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id, owner=request.user)
+    question = get_object_or_404(Question, id=question_id, quiz=quiz)
+    question.delete()
+    return redirect("quiz_detail", quiz_id=quiz.id)
