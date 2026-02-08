@@ -3,46 +3,184 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Kahoot-remake{% endblock %}</title>
+    <title>Лоббі хоста - Kahoot-remake</title>
     <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
     <style>
         body {
-            margin: 1;
+            margin: 0;
             height: 100vh;
             background-image: url("{% static 'Home_bg.png' %}");
             background-size: cover;
-            align-items: center;
-            font-family: Arial, sans-serif;
+            background-position: center;
+            font-family: 'Nunito', Arial, sans-serif;
             color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .lobby-container {
+            background-color: rgba(0, 0, 0, 0.514);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+        }
+
+        .lobby-container::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(45deg, #8a2be2, #764ba2, #ffffff71, #764ba2, #8a2be2);
+            border-radius: 25px;
+            z-index: -1;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #8a2be2;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-code {
+            font-size: 36px;
+            font-weight: bold;
+            color: #ff69b4;
+            margin-bottom: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px 30px;
+            border-radius: 15px;
+            display: inline-block;
+            letter-spacing: 5px;
+        }
+
+        .players-section {
+            margin-bottom: 30px;
+        }
+
+        .players-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #8a2be2;
+        }
+
+        #players {
+            list-style: none;
+            padding: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        #players.waiting {
+            max-height: none;
+            overflow-y: visible;
+        }
+
+        #players li {
+            background-color: rgba(138, 43, 226, 0.1);
+            margin: 5px 0;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+
+        #players li:hover {
+            background-color: rgba(138, 43, 226, 0.2);
+        }
+
+        #players li.pulse {
+            background-color: transparent;
+            padding: 0;
+            margin: 0;
+            color: #ff69b4;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #8a2be2, #ff69b4);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #question {
+            margin-top: 30px;
+            font-size: 24px;
+            color: #8a2be2;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
-<h2>Ви — хост гри</h2>
+    <div class="lobby-container">
+        <h1>Лоббі хоста</h1>
+        <div class="game-code">{{ session.code }}</div>
 
-<p>Код гри: {{ session.code }}</p>
+        <div class="players-section">
+            <div class="players-title" id="playersTitle">Гравці:</div>
+            <ul id="players">
+                {% for player in session.players.all %}
+                    <li>{{ player.name }}</li>
+                {% empty %}
+                    <li class="pulse">Очікуємо гравців...</li>
+                {% endfor %}
+            </ul>
+        </div>
 
-<p>Гравці:</p>
-<ul id="players">
-    {% for player in session.players.all %}
-        <li>{{ player.name }}</li>
-    {% empty %}
-        <li>Поки ніхто не підключився</li>
-    {% endfor %}
-</ul>
+        {% if request.user == session.host %}
+            <button type="button" class="start-btn" onclick="onStartClick()" id="startBtn">Почати гру</button>
+        {% endif %}
 
-<p>Очікуємо гравців...</p>
-
-{% if request.user == session.host %}
-<button type="button" onclick="onStartClick()">Почати гру</button>
-{% endif %}
-
-<div id="question" style="margin-top: 30px; font-size: 24px;"></div>
+        <div id="question"></div>
+    </div>
 
 <script>
 window.addEventListener("load", () => {
     const code = "{{ session.code }}";  // Переконайся, що це не порожнє
     const playerName = "{{ request.user.username|default:'Host' }}";
+    const isHost = {% if request.user == session.host %}true{% else %}false{% endif %};
     const startBtn = document.getElementById("startBtn"); // твоя кнопка
     const nameInput = document.getElementById("nameInput"); // поле для імені
     const playersList = document.getElementById("players"); // ul для гравців
@@ -76,11 +214,35 @@ window.addEventListener("load", () => {
 
         if(data.type === "players" && playersList) {
             playersList.innerHTML = "";
-            data.players.forEach(name => {
+            const playersTitle = document.getElementById("playersTitle");
+            if (data.players.length === 0) {
+                playersList.classList.add("waiting");
                 const li = document.createElement("li");
-                li.textContent = name;
+                li.textContent = "Очікуємо гравців...";
+                li.className = "pulse";
                 playersList.appendChild(li);
-            });
+                if (playersTitle) playersTitle.style.display = "none";
+            } else {
+                playersList.classList.remove("waiting");
+                data.players.forEach(name => {
+                    const li = document.createElement("li");
+                    li.textContent = name;
+                    if (isHost) {
+                        const btn = document.createElement("button");
+                        btn.textContent = "X";
+                        btn.style.background = "red";
+                        btn.style.color = "white";
+                        btn.style.border = "none";
+                        btn.style.padding = "2px 5px";
+                        btn.style.cursor = "pointer";
+                        btn.style.float = "right";
+                        btn.onclick = () => kickPlayer(name);
+                        li.appendChild(btn);
+                    }
+                    playersList.appendChild(li);
+                });
+                if (playersTitle) playersTitle.style.display = "block";
+            }
         }
 
 
@@ -112,6 +274,18 @@ window.addEventListener("load", () => {
 
         startGame();
         console.log("GAME STARTED");
+    };
+
+    window.kickPlayer = function (playerName) {
+        if(!socket || socket.readyState !== WebSocket.OPEN) {
+            console.log("WebSocket not open yet");
+            return;
+        }
+
+        socket.send(JSON.stringify({
+            type: "kick_player",
+            player_name: playerName
+        }));
     };
 });
 </script>

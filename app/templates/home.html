@@ -56,6 +56,11 @@
             color: #ffffff;
         }
 
+        .btn-logout {
+            background-color: #ff0000;
+            color: #ffffff;
+        }
+
         .container {
             text-align: center;
         }
@@ -103,6 +108,10 @@
 
             <a href="{% url 'quiz_list' %}">
                 <button class="top-btn btn-main_page">Мої вікторини</button>
+            </a>
+
+            <a href="{% url 'logout' %}">
+                <button class="top-btn btn-logout">Вийти</button>
             </a>
 
         {% else %}

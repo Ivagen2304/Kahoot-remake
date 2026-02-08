@@ -42,14 +42,14 @@ def register(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect("create_quiz")  # вже залогінений
+        return redirect("quiz_list")  # вже залогінений
 
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect("create_quiz")
+            return redirect("quiz_list")
     else:
         form = AuthenticationForm()
 
@@ -94,7 +94,7 @@ def add_question(request, quiz_id):
 
     if request.method == 'POST':
         qform = QuestionForm(request.POST)
-        formset = AnswerOptionFormSet(request.POST)
+        formset = AnswerOptionFormSet(request.POST, prefix='answeroption_set')
         if qform.is_valid() and formset.is_valid():
             question = qform.save(commit=False)
             question.quiz = quiz
@@ -104,7 +104,7 @@ def add_question(request, quiz_id):
             return redirect('quiz_detail', quiz_id=quiz.id)  # можна додавати ще
     else:
         qform = QuestionForm()
-        formset = AnswerOptionFormSet()
+        formset = AnswerOptionFormSet(prefix='answeroption_set')
     return render(request, 'add_question.html', {'qform': qform, 'formset': formset, 'quiz': quiz})
 
 
@@ -131,18 +131,20 @@ def host_room(request, code):
 def player_room(request, code):
     session = get_object_or_404(GameSession, code=code)
     player_name = ""
+    player_id = None
     if "player_id" in request.session:
         player = Player.objects.filter(id=request.session["player_id"], session=session).first()
         if player:
             player_name = player.name
-    return render(request, "player_room.html", {"session": session, "player_name": player_name})
+            player_id = player.id
+    return render(request, "player_room.html", {"session": session, "player_name": player_name, "player_id": player_id})
 
 def enter_nickname(request, code):
     session = get_object_or_404(GameSession, code=code, is_active=True)
     if request.method == 'POST':
         name = request.POST.get('name')
         if name:
-            player = Player.objects.create(session=session, name=name)
+            player, created = Player.objects.get_or_create(session=session, name=name)
             request.session["player_id"] = player.id
             return redirect("player_room", code)
     return render(request, "join_nickname.html", {"code": code})

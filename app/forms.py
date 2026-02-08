@@ -31,6 +31,11 @@ class QuestionForm(forms.ModelForm):
 
 
 class AnswerOptionForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['is_correct'].widget.attrs['class'] = 'checkbox-input'
+        self.fields['is_correct'].label = 'Правильна відповідь'
+
     class Meta:
         model = AnswerOption
         fields = ["text", "is_correct"]

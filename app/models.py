@@ -40,6 +40,7 @@ class GameSession(models.Model):
     code = models.CharField(max_length=6, unique=True)  # 6-значний код для входу
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    current_question_index = models.IntegerField(default=0)
 
     def __str__(self):
         return f"Session {self.code}"
@@ -51,6 +52,10 @@ class Player(models.Model):
     name = models.CharField(max_length=100)
     current_answer = models.CharField(max_length=300, null=True, blank=True)
     correct_answers = models.IntegerField(default=0)
+    channel_name = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('session', 'name')
 
     def __str__(self):
         return self.name

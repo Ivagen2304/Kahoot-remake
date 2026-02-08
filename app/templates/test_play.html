@@ -6,115 +6,282 @@
     <link rel="icon" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico">
     <style>
         body {
+            margin: 0;
+            padding: 0;
             height: 100vh;
-            background-image: url("{% static 'Home_bg.png' %}");
-            background-size: cover;
-            text-align: center;
-            font-family: Arial, sans-serif;
-            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Nunito', Arial, sans-serif;
+            overflow: hidden;
         }
 
-        button {
-            margin: 10px;
-            padding: 15px 30px;
-            font-size: 18px;
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .question-section {
+            text-align: center;
+            margin-bottom: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        #questionText {
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        #timer {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #ff6b6b;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+            animation: pulse 1s infinite;
+        }
+
+        .answers-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+            justify-items: stretch;
+        }
+
+        .answer-btn {
+            width: 100%;
+            padding: 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+        }
+
+        .answer-btn:nth-child(1) {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        }
+
+        .answer-btn:nth-child(2) {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+
+        .answer-btn:nth-child(3) {
+            background: linear-gradient(135deg, #ffe66d, #ffb347);
+        }
+
+        .answer-btn:nth-child(4) {
+            background: linear-gradient(135deg, #a8e6cf, #52c234);
+        }
+
+        .answer-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .answer-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         #waitingBox {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
             width: 100vw;
             height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
             display: none;
-            background: black; /* щоб не було порожніх країв */
-            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
 
         #waitingBox img {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* 🔥 НЕ збільшує гіф */
-            display: block;
+            object-fit: cover;
         }
 
-        /* Текст поверх */
         .waiting-text {
             position: absolute;
             top: 60%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 2;
-
             color: white;
-            font-size: 1rem;
+            font-size: 1.5rem;
             font-weight: bold;
             text-align: center;
-
-            text-shadow: 0 0 10px black;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 20px 30px;
-            border-radius: 12px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 30px 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
         }
 
         #answerCounter {
-            margin-top: 15px;
-            font-size: 1.4rem;
+            margin-top: 20px;
+            font-size: 1.8rem;
             opacity: 0.9;
         }
 
+        #resultsBox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .results-content {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .results-content h2 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .results-table th {
+            background: #f8f9fa;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .results-table td {
+            color: #555;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            #questionText {
+                font-size: 2rem;
+                padding: 20px;
+            }
+
+            .answers-section {
+                grid-template-columns: 1fr;
+            }
+
+            .answer-btn {
+                padding: 20px;
+                font-size: 1.2rem;
+            }
+        }
     </style>
 </head>
 
 <body data-code="{{ session.code }}">
+    <div class="game-container">
+        <div class="question-section">
+            <div id="questionText"></div>
+            <div id="timer"></div>
+        </div>
 
-<h1>Вікторина розпочалась</h1>
-<p id="questionCounter"></p>
-
-<div id="questionBox">
-    <h2 id="questionText"></h2>
-
-    <img id="questionImage" style="display:none; max-width:400px;">
-    <video id="questionVideo" controls style="display:none; max-width:400px;"></video>
-</div>
-
-<div id="answersBox"></div>
-
-<div id="waitingBox" style="display:none;">
-    <img src="{% static 'waiting.gif' %}"/>
-    
-    <div class="waiting-text">
-        Чекаємо, поки інші гравці дадуть відповідь...
-        <div id="answerCounter">0 / 0</div>
+        <div class="answers-section" id="answersBox"></div>
     </div>
-</div>
 
+    <div id="waitingBox">
+        <img src="{% static 'waiting.gif' %}" alt="Waiting animation" />
+        <div class="waiting-text">
+            Чекаємо, поки інші гравці дадуть відповідь...
+            <div id="answerCounter">0 / 0</div>
+        </div>
+    </div>
 
-<div id="resultsBox" style="display:none;">
-    <h2>Результати</h2>
-    <table align="center">
-        <thead>
-            <tr>
-                <th>Гравець</th>
-                <th>Результат</th>
-            </tr>
-        </thead>
-        <tbody id="resultsTable"></tbody>
-    </table>
-</div>
+    <div id="resultsBox">
+        <div class="results-content">
+            <h2>Результати</h2>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Гравець</th>
+                        <th>Результат</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTable"></tbody>
+            </table>
+        </div>
+    </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
     const code = "{{ session.code }}";
     let storedName = localStorage.getItem("player_name");
-    const playerName = (storedName && storedName !== "null") ? storedName : "";
+    const playerName = (storedName && storedName !== "null") ? storedName : "Player";
 
     let redirected = false;  // 👈 ФЛАГ
+    let timerInterval;  // Для таймера
+    let currentQuestionText = "";  // Для хранения текста вопроса
 
     const questionText = document.getElementById("questionText");
     const answersBox = document.getElementById("answersBox");
     const waitingBox = document.getElementById("waitingBox");
     const resultsBox = document.getElementById("resultsBox");
     const resultsTable = document.getElementById("resultsTable");
+    const timerDisplay = document.getElementById("timer");
 
     const socket = new WebSocket(
         "ws://" + window.location.host + "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName)
@@ -136,21 +303,31 @@
         if (data.type === "question") {
              // Показати питання
             const questionText = document.getElementById("questionText");
-            questionText.innerText = data.text;
+            currentQuestionText = data.question;
+            questionText.innerText = data.question;
 
             // Показати кнопки відповідей
             const answersBox = document.getElementById("answersBox");
             answersBox.innerHTML = ""; // очищаємо старі кнопки
 
-            data.options.forEach(answer => {
+            data.options.forEach((option, index) => {
                 const btn = document.createElement("button");
-                btn.innerText = answer.text;
+                btn.innerText = option.text;
+                btn.className = "answer-btn";
 
                 // При натисканні на кнопку — відправляємо відповідь
-                btn.onclick = () => sendAnswer(answer.id);
+                btn.onclick = () => sendAnswer(option.id);
 
                 answersBox.appendChild(btn);
             });
+
+            // Показати блоки питання і відповідей
+            answersBox.style.display = "block";
+
+            // Запустить таймер
+            if (data.time_limit) {
+                startTimer(data.time_limit);
+            }
         }
 
         if (data.type === "redirect") {
@@ -165,6 +342,10 @@
             showWaiting();
         }
 
+        if (data.type === "answer") {
+            showAnswer(data.correct_option, data.wait_time);
+        }
+
         if (data.type === "results") {
             showResults(data.results);
         }
@@ -172,6 +353,11 @@
         if (data.type === "answers_count") {
             document.getElementById("answerCounter").innerText =
                 `${data.answered} / ${data.total}`;
+        }
+
+        if (data.type === "time_up") {
+            // Time is up, show message but allow answering
+            timerDisplay.innerText = "Время вышло!";
         }
     };
 
@@ -184,7 +370,6 @@
         }));
 
         // ховаємо кнопки
-        document.getElementById("questionBox").style.display = "none";
         document.getElementById("answersBox").style.display = "none";
 
         // показуємо очікування
@@ -196,14 +381,42 @@
         waitingBox.style.display = "block";
     }
 
-    function showResults(results) {
+    function showAnswer(correct_option, wait_time) {
         waitingBox.style.display = "none";
-        resultsBox.style.display = "block";
+        questionText.innerText = `Правильна відповідь: ${correct_option}`;
+        answersBox.innerHTML = "";
+
+        // Следующий вопрос будет отправлен сервером через WebSocket и перезапишет текст
+    }
+
+    function startTimer(timeLimit) {
+        if (timerInterval) clearInterval(timerInterval);
+        let timeLeft = timeLimit;
+        timerDisplay.innerText = timeLeft;
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerDisplay.innerText = "Время вышло!";
+                // Allow answering even after time up
+            }
+        }, 1000);
+    }
+
+    function showResults(results) {
+        if (timerInterval) clearInterval(timerInterval);
+        waitingBox.style.display = "none";
+        resultsBox.style.display = "flex";
         resultsTable.innerHTML = "";
 
         results.forEach(r => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${r.name}</td><td>${r.correct}/${r.total}</td>`;
+            let nameCell = r.name;
+            if (r.name === playerName) {
+                nameCell = "(Вы) " + r.name;
+            }
+            tr.innerHTML = `<td>${nameCell}</td><td>${r.correct}/${r.total}</td>`;
             resultsTable.appendChild(tr);
         });
     }

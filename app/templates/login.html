@@ -3,7 +3,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Kahoot-remake</title>
+    <title>Вхід - Kahoot-remake</title>
     <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
     <style>
         body {
@@ -12,34 +12,131 @@
             background-image: url("{% static 'Home_bg.png' %}");
             background-size: cover;
             display: flex;
+            justify-content: center;
+            align-items: center;
             font-family: Arial, sans-serif;
             color: white;
+        }
+
+        .login-container {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #3cff00;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .login-btn:hover {
+            background-color: #2ecc00;
+        }
+
+        .links {
+            margin-top: 20px;
+        }
+
+        .links a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
+    <div class="login-container">
+        <h1>Вхід</h1>
 
-<form method="post">
-    {% csrf_token %}
-    <h2>Вхід</h2>
+        {% if form.non_field_errors %}
+            <div class="error-message">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
 
-    <h2>Логін: {{ form.username }}</h2>
-    {% for error in form.username.errors %}
-        <div style="color:red;">{{ error }}</div>
-    {% endfor %}
+        <form method="post">
+            {% csrf_token %}
 
-    <h2>Пароль: {{ form.password }}</h2>
-    {% for error in form.password.errors %}
-        <div style="color:red;">{{ error }}</div>
-    {% endfor %}
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">Ім'я користувача:</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="error-message">
+                        {% for error in form.username.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
 
-    {% if form.non_field_errors %}
-        <div style="color:red;">
-            {{ form.non_field_errors }}
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}">Пароль:</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <div class="error-message">
+                        {% for error in form.password.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="login-btn">Увійти</button>
+        </form>
+
+        <div class="links">
+            <a href="{% url 'register' %}">Зареєструватися</a>
+            <a href="{% url 'home' %}">На головну</a>
         </div>
-    {% endif %}
-
-    <button type="submit">Увійти</button>
-</form>
+    </div>
 </body>
 </html>

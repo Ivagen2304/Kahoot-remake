@@ -312,6 +312,22 @@
                 <div id="answers-formset">
                     {{ formset.management_form }}
 
+                    <!-- Template for new answer forms -->
+                    <div id="answer-template" class="answer-form" style="display: none;">
+                        <span class="answer-number">1</span>
+                        <button type="button" class="remove-answer-btn" onclick="removeAnswer(this)">×</button>
+                        <div class="form-group">
+                            <label class="form-label">Текст відповіді</label>
+                            <input type="text" class="form-input" name="answeroption_set-__prefix__-text" id="id_answeroption_set-__prefix__-text" placeholder="Введіть варіант відповіді">
+                        </div>
+                        <div class="checkbox-group">
+                            <label class="form-label">
+                                <input type="checkbox" class="checkbox-input" name="answeroption_set-__prefix__-is_correct" id="id_answeroption_set-__prefix__-is_correct">
+                                Правильна відповідь
+                            </label>
+                        </div>
+                    </div>
+
                     {% for form in formset %}
                         <div class="answer-form" data-form-index="{{ forloop.counter0 }}">
                             <span class="answer-number">{{ forloop.counter }}</span>
@@ -320,13 +336,15 @@
                             {% endif %}
 
                             <div class="form-group">
-                                <label for="{{ form.text.id_for_label }}" class="form-label">{{ form.text.label }}</label>
+                                <label for="{{ form.text.id_for_label }}" class="form-label">Текст відповіді</label>
                                 {{ form.text }}
                             </div>
 
                             <div class="checkbox-group">
-                                {{ form.is_correct }}
-                                <label for="{{ form.is_correct.id_for_label }}" class="form-label">{{ form.is_correct.label }}</label>
+                                <label class="form-label" for="{{ form.is_correct.id_for_label }}">
+                                    <input type="checkbox" class="checkbox-input" name="{{ form.is_correct.name }}" value="on" id="{{ form.is_correct.id_for_label }}" {% if form.is_correct.value %}checked{% endif %}>
+                                    Правильна відповідь
+                                </label>
                             </div>
                         </div>
                     {% endfor %}
@@ -351,37 +369,29 @@
         document.addEventListener("DOMContentLoaded", function () {
             const addBtn = document.getElementById("add-answer-btn");
             const formsetDiv = document.getElementById("answers-formset");
-            const totalForms = document.getElementById("id_answeroption_set-TOTAL_FORMS");
+            const totalForms = document.querySelector("input[name='answeroption_set-TOTAL_FORMS']");
+            const template = document.getElementById("answer-template");
+
+            if (!addBtn || !formsetDiv || !totalForms || !template) {
+                console.error("Required elements not found");
+                return;
+            }
 
             addBtn.addEventListener("click", function () {
                 const currentCount = parseInt(totalForms.value);
 
-                // Беремо першу форму як шаблон
-                const firstForm = document.querySelector(".answer-form");
-                const newForm = firstForm.cloneNode(true);
-
-                // Оновлюємо номер відповіді
-                const answerNumber = newForm.querySelector(".answer-number");
-                answerNumber.textContent = currentCount + 1;
-
-                // Додаємо кнопку видалення
-                const removeBtn = document.createElement("button");
-                removeBtn.type = "button";
-                removeBtn.className = "remove-answer-btn";
-                removeBtn.innerHTML = "×";
-                removeBtn.onclick = function() { removeAnswer(this); };
-                newForm.appendChild(removeBtn);
+                // Створюємо нову форму на основі останньої видимої
+                const lastForm = document.querySelector(".answer-form:not(#answer-template):last-child");
+                const newForm = lastForm.cloneNode(true);
 
                 // Очищаємо значення
                 newForm.querySelectorAll("input").forEach(input => {
                     input.value = "";
                     input.checked = false;
 
-                    const name = input.name.replace(/-\d+-/, `-${currentCount}-`);
-                    const id = input.id.replace(/-\d+-/, `-${currentCount}-`);
-
-                    input.name = name;
-                    input.id = id;
+                    // Оновлюємо name та id
+                    input.name = input.name.replace(/-\d+-/, `-${currentCount}-`);
+                    input.id = input.id.replace(/-\d+-/, `-${currentCount}-`);
                 });
 
                 // Оновлюємо атрибути label
@@ -392,8 +402,26 @@
                     }
                 });
 
+                // Оновлюємо номер відповіді
+                const answerNumber = newForm.querySelector(".answer-number");
+                if (answerNumber) {
+                    answerNumber.textContent = currentCount + 1;
+                }
+
                 // Оновлюємо data-form-index
                 newForm.setAttribute("data-form-index", currentCount);
+
+                // Додаємо кнопку видалення для нових форм (починаючи з 3-ї)
+                if (currentCount + 1 > 2) {
+                    if (!newForm.querySelector('.remove-answer-btn')) {
+                        const removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.className = 'remove-answer-btn';
+                        removeBtn.innerHTML = '×';
+                        removeBtn.onclick = function() { removeAnswer(this); };
+                        newForm.appendChild(removeBtn);
+                    }
+                }
 
                 formsetDiv.appendChild(newForm);
                 totalForms.value = currentCount + 1;
@@ -409,7 +437,7 @@
                 totalForms.value = parseInt(totalForms.value) - 1;
 
                 // Оновлюємо номери інших форм
-                const forms = document.querySelectorAll(".answer-form");
+                const forms = document.querySelectorAll(".answer-form:not(#answer-template)");
                 forms.forEach((form, index) => {
                     const number = form.querySelector(".answer-number");
                     if (number) {
