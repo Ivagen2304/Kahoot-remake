@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Kahoot-remake</title>
+    <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-image: url("{% static 'Home_bg.png' %}");
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: white;
+            position: relative;
+        }
+
+        .top-buttons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .top-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .top-btn:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+
+        .btn-register {
+            background-color: #3cff00;
+            color: #000;
+        }
+
+        .btn-main_page {
+            background-color: #3cff00;
+            color: #000;
+        }
+
+        .btn-login {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .btn-logout {
+            background-color: #ff0000;
+            color: #ffffff;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 40px;
+        }
+
+        .code-input {
+            padding: 20px;
+            font-size: 30px;
+            width: 400px;
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 8px;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .code-input::placeholder {
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        .find-btn {
+            padding: 20px 40px;
+            font-size: 20px;
+            background-color: #3cff00;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .find-btn:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-buttons">
+        {% if request.user.is_authenticated %}
+
+            <a href="{% url 'quiz_list' %}">
+                <button class="top-btn btn-main_page">Мої вікторини</button>
+            </a>
+
+            <a href="{% url 'logout' %}">
+                <button class="top-btn btn-logout">Вийти</button>
+            </a>
+
+        {% else %}
+
+            <a href="{% url 'login' %}">
+                <button class="top-btn btn-login">Увійти</button>
+            </a>
+
+            <a href="{% url 'register' %}">
+                <button class="top-btn btn-register">Зареєструватися</button>
+            </a>
+
+        {% endif %}
+    </div>
+
+    <div class="container">
+        <h1>🎉 Kahoot-remake! 🎉</h1>
+
+        {% if error %}
+            <script>
+                alert("{{ error }}");
+            </script>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="code" class="code-input" placeholder="Код вікторини" maxlength="6" required>
+            <br>
+            <button type="submit" class="find-btn">Знайти</button>
+        </form>
+    </div>
+</body>
+</html>
