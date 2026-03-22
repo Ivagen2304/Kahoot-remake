@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-&=06qqg(b*r^*wcw(f%n!bb3-k)kx)eiorc5r0wni5b)okz4af
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['kahoot-remake.onrender.com']
 
 
 # Application definition
