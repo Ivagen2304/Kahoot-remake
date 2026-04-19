@@ -14,7 +14,7 @@ from pathlib import Path
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-&=06qqg(b*r^*wcw(f%n!bb3-k)kx)eiorc5r0wni5b)okz4af
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['kahoot-remake.onrender.com']
+ALLOWED_HOSTS = ['kahoot-remake.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition

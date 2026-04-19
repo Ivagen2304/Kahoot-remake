@@ -131,13 +131,13 @@
 
 <script>
 const code = "{{ session.code }}";
-let storedName = localStorage.getItem("player_name");
+let storedName = sessionStorage.getItem("player_name") || localStorage.getItem("player_name");
 const playerName = "{{ player_name|default:'' }}" || (storedName && storedName !== "null" ? storedName : null) || "Player";
-localStorage.setItem("player_name", playerName);
+sessionStorage.setItem("player_name", playerName);
 
 const socket = new WebSocket(
     "ws://" + window.location.host +
-    "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName)
+    "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName) + "&role=player"
 );
 
 socket.onopen = () =>
@@ -177,6 +177,17 @@ socket.onmessage = function(event) {
 
     if (data.type === "redirect") {
         window.location.href = data.url;
+    }
+
+    if (data.type === "kicked") {
+        document.querySelector(".lobby-container").innerHTML = `
+            <h1 style="color: #ff69b4;">Вас вигнали</h1>
+            <div class="waiting-message">${data.message}</div>
+            <p style="font-size: 18px; opacity: 0.8;">Повернення на головну сторінку через 3 секунди...</p>
+        `;
+        setTimeout(() => {
+            window.location.href = "/";
+        }, 3000);
     }
 };
 

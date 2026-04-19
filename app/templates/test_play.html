@@ -263,14 +263,16 @@
                 </thead>
                 <tbody id="resultsTable"></tbody>
             </table>
+            <a href="/" style="display: inline-block; margin-top: 30px; background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; border: none; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; text-decoration: none; box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Повернутися на головну</a>
         </div>
     </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
     const code = "{{ session.code }}";
-    let storedName = localStorage.getItem("player_name");
+    let storedName = sessionStorage.getItem("player_name") || localStorage.getItem("player_name");
     const playerName = (storedName && storedName !== "null") ? storedName : "Player";
+    sessionStorage.setItem("player_name", playerName);
 
     let redirected = false;  // 👈 ФЛАГ
     let timerInterval;  // Для таймера
@@ -284,7 +286,7 @@
     const timerDisplay = document.getElementById("timer");
 
     const socket = new WebSocket(
-        "ws://" + window.location.host + "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName)
+        "ws://" + window.location.host + "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName) + "&role=player"
     );
 
     socket.onopen = () => {
@@ -322,7 +324,8 @@
             });
 
             // Показати блоки питання і відповідей
-            answersBox.style.display = "block";
+            answersBox.style.display = "grid";
+            document.querySelector('.question-section').style.display = "block";
 
             // Запустить таймер
             if (data.time_limit) {
@@ -339,14 +342,46 @@
         }
 
         if (data.type === "waiting") {
-            showWaiting();
+        document.getElementById("answersBox").style.display = "none";
+        document.getElementById("waitingBox").style.display = "block";
         }
 
-        if (data.type === "answer") {
-            showAnswer(data.correct_option, data.wait_time);
+        if (data.type === "show_answer_chart") {
+            if (timerInterval) clearInterval(timerInterval);
+            waitingBox.style.display = "none";
+            
+            const maxVotes = Math.max(...data.chart_data.map(d => d.votes), 1);
+            answersBox.innerHTML = `
+                <h2 style="color: #4CAF50; font-size: 24px; text-align: center; margin-bottom: 30px;">Правильний варіант: ${data.correct_option}</h2>
+                <div style="display: flex; justify-content: center; align-items: flex-end; height: 150px; gap: 15px; margin-top: 20px; border-bottom: 2px solid rgba(255,255,255,0.5); padding-bottom: 10px;">
+                    ${data.chart_data.map(opt => `
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 80px;">
+                            <div style="font-size: 20px; margin-bottom: 5px;">${opt.votes}</div>
+                            <div style="width: 50px; height: ${Math.max((opt.votes / maxVotes) * 120, 5)}px; background: ${opt.is_correct ? '#4CAF50' : '#ff69b4'}; border-radius: 5px 5px 0 0; transition: height 0.5s;"></div>
+                            <div style="margin-top: 10px; font-size: 12px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${opt.text}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            answersBox.style.display = "block";
+            document.querySelector('.question-section').style.display = "none";
         }
 
-        if (data.type === "results") {
+        if (data.type === "show_leaderboard") {
+            answersBox.innerHTML = `
+                <h2 style="text-align: center; margin-bottom: 20px;">Проміжні результати</h2>
+                <ul style="list-style: none; padding: 0; max-width: 400px; margin: 0 auto;">
+                    ${data.leaderboard.map((p, i) => `
+                        <li style="background: ${p.name === playerName ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255,255,255,0.1)'}; padding: 15px; margin: 10px 0; border-radius: 10px; display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; border: ${p.name === playerName ? '2px solid #4CAF50' : 'none'};">
+                            <span>${i+1}. ${p.name} ${p.name === playerName ? '(Ви)' : ''}</span>
+                            <span>${p.correct} очків</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+
+        if (data.type === "show_final_results") {
             showResults(data.results);
         }
 
@@ -357,6 +392,7 @@
 
         if (data.type === "time_up") {
             // Time is up, show message but allow answering
+            if (timerInterval) clearInterval(timerInterval);
             timerDisplay.innerText = "Время вышло!";
         }
     };
@@ -377,16 +413,8 @@
     }
 
     function showWaiting() {
-        answersBox.innerHTML = "";
-        waitingBox.style.display = "block";
-    }
-
-    function showAnswer(correct_option, wait_time) {
-        waitingBox.style.display = "none";
-        questionText.innerText = `Правильна відповідь: ${correct_option}`;
-        answersBox.innerHTML = "";
-
-        // Следующий вопрос будет отправлен сервером через WebSocket и перезапишет текст
+        document.getElementById("answersBox").style.display = "none";
+        document.getElementById("waitingBox").style.display = "block";
     }
 
     function startTimer(timeLimit) {

@@ -25,6 +25,11 @@ class QuizForm(forms.ModelForm):
 
 
 class QuestionForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['text'].widget.attrs.update({'class': 'form-input', 'placeholder': 'Введіть питання'})
+        self.fields['time_limit'].widget.attrs.update({'class': 'form-input'})
+
     class Meta:
         model = Question
         fields = ["text", "time_limit"]
@@ -33,6 +38,7 @@ class QuestionForm(forms.ModelForm):
 class AnswerOptionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['text'].widget.attrs.update({'class': 'form-input', 'placeholder': 'Введіть варіант відповіді'})
         self.fields['is_correct'].widget.attrs['class'] = 'checkbox-input'
         self.fields['is_correct'].label = 'Правильна відповідь'
 

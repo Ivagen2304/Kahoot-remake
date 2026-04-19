@@ -380,29 +380,14 @@
             addBtn.addEventListener("click", function () {
                 const currentCount = parseInt(totalForms.value);
 
-                // Створюємо нову форму на основі останньої видимої
-                const lastForm = document.querySelector(".answer-form:not(#answer-template):last-child");
-                const newForm = lastForm.cloneNode(true);
+                // Створюємо нову форму на основі ШАБЛОНУ, щоб __prefix__ працював правильно
+                const templateForm = document.getElementById("answer-template");
+                const newForm = templateForm.cloneNode(true);
+                newForm.id = "";
+                newForm.style.display = "block";
 
-                // Очищаємо значення
-                newForm.querySelectorAll("input").forEach(input => {
-                    if (input.type !== 'checkbox') {
-                        input.value = "";
-                    }
-                    input.checked = false;
-
-                    // Оновлюємо name та id
-                    input.name = input.name.replace(/__prefix__/g, currentCount);
-                    input.id = input.id.replace(/__prefix__/g, currentCount);
-                });
-
-                // Оновлюємо атрибути label
-                newForm.querySelectorAll("label").forEach(label => {
-                    const forAttr = label.getAttribute("for");
-                    if (forAttr) {
-                        label.setAttribute("for", forAttr.replace(/-\d+-/, `-${currentCount}-`));
-                    }
-                });
+                // Оновлюємо всі __prefix__ на поточний індекс
+                newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, currentCount);
 
                 // Оновлюємо номер відповіді
                 const answerNumber = newForm.querySelector(".answer-number");
@@ -412,18 +397,6 @@
 
                 // Оновлюємо data-form-index
                 newForm.setAttribute("data-form-index", currentCount);
-
-                // Додаємо кнопку видалення для нових форм (починаючи з 3-ї)
-                if (currentCount + 1 > 2) {
-                    if (!newForm.querySelector('.remove-answer-btn')) {
-                        const removeBtn = document.createElement('button');
-                        removeBtn.type = 'button';
-                        removeBtn.className = 'remove-answer-btn';
-                        removeBtn.innerHTML = '×';
-                        removeBtn.onclick = function() { removeAnswer(this); };
-                        newForm.appendChild(removeBtn);
-                    }
-                }
 
                 formsetDiv.appendChild(newForm);
                 totalForms.value = currentCount + 1;
@@ -438,7 +411,7 @@
                 form.remove();
                 totalForms.value = parseInt(totalForms.value) - 1;
 
-                // Оновлюємо номери інших форм
+                // Оновлюємо номери та індекси атрибутів інших форм
                 const forms = document.querySelectorAll(".answer-form:not(#answer-template)");
                 forms.forEach((form, index) => {
                     const number = form.querySelector(".answer-number");
@@ -446,6 +419,16 @@
                         number.textContent = index + 1;
                     }
                     form.setAttribute("data-form-index", index);
+
+                    // Оновлюємо name та id атрибути для правильної індексації Django
+                    form.querySelectorAll("input, select, textarea").forEach(input => {
+                        if (input.name) input.name = input.name.replace(/-\d+-/, `-${index}-`);
+                        if (input.id) input.id = input.id.replace(/-\d+-/, `-${index}-`);
+                    });
+                    form.querySelectorAll("label").forEach(label => {
+                        const forAttr = label.getAttribute("for");
+                        if (forAttr) label.setAttribute("for", forAttr.replace(/-\d+-/, `-${index}-`));
+                    });
                 });
             } else {
                 alert("Мінімальна кількість варіантів відповіді - 2");

@@ -5,7 +5,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
 from urllib.parse import parse_qs
 from django.db import connection
-from .models import GameSession, Player, AnswerOption, PlayerAnswer
+from .models import GameSession, Player, Question, AnswerOption, PlayerAnswer
 
 class GameConsumer(AsyncWebsocketConsumer):
     # Class variable to store active timers per room
@@ -24,22 +24,23 @@ class GameConsumer(AsyncWebsocketConsumer):
         # 👉 ПРОВЕРЯЕМ, ХОст ЛИ ЭТО
         user = self.scope.get("user")
         host_id = await sync_to_async(lambda: self.session.host_id)()
-        self.is_host = user and user.is_authenticated and user.id == host_id
 
-        # 👉 Дістаємо імʼя гравця з WebSocket URL
+        # 👉 Дістаємо параметри з WebSocket URL
         query_string = parse_qs(self.scope["query_string"].decode())
         player_name = query_string.get("name", [None])[0]
+        role = query_string.get("role", ["player"])[0]
+
+        # Перевіряємо, чи є користувач хостом сесії І чи він підключився як хост
+        self.is_host = user and user.is_authenticated and user.id == host_id and role == "host"
 
         # Если хост — не создаём Player, но сохраняем имя для отображения
         if self.is_host:
             self.player = None
             self.host_name = player_name or user.username if user else "Host"
         else:
-            # 👉 Спробуємо знайти гравця за player_id з сесії
-            session_dict = self.scope.get("session", {})
-            player_id = session_dict.get("player_id")
-            if player_id:
-                self.player = await sync_to_async(lambda: Player.objects.filter(id=player_id, session=self.session).first())()
+            # 👉 Спробуємо знайти гравця за ім'ям, щоб уникнути конфліктів при тестуванні в одному браузері
+            if player_name:
+                self.player = await sync_to_async(lambda: Player.objects.filter(name=player_name, session=self.session).first())()
                 if self.player:
                     self.player.channel_name = self.channel_name
                     await sync_to_async(self.player.save)()
@@ -48,7 +49,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                     await self.close()
                     return
             else:
-                # Якщо немає player_id, закриваємо
                 await self.close()
                 return
 
@@ -63,6 +63,16 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.broadcast_players()
 
     async def disconnect(self, close_code):
+        if hasattr(self, 'player') and self.player:
+            # Очищаємо channel_name, якщо гравець відключився (і якщо він ще існує в БД)
+            try:
+                current_channel = await sync_to_async(lambda: Player.objects.get(id=self.player.id).channel_name)()
+                if current_channel == self.channel_name:
+                    self.player.channel_name = None
+                    await sync_to_async(self.player.save)()
+            except Player.DoesNotExist:
+                pass
+
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         await self.broadcast_players()
 
@@ -71,23 +81,33 @@ class GameConsumer(AsyncWebsocketConsumer):
 
         if data["type"] == "join":
             await self.add_player(data["name"])
-        elif data["type"] == "start_game":
-            await self.start_game()
+        if data["type"] == "start_game":
+            if self.is_host:
+                await self.start_game(data)
         elif data["type"] == "answer":
-            await self.record_answer(data)
+            if not self.is_host:
+                await self.record_answer(data)
         elif data["type"] == "kick_player":
-            await self.kick_player(data)
+            if self.is_host:
+                await self.kick_player(data)
+        elif data["type"] == "next_phase":
+            if self.is_host:
+                await self.handle_next_phase(data)
+        elif data["type"] == "skip_question":
+            if self.is_host:
+                await self.handle_skip_question()
         elif data["type"] == "get_current_question":  # 👈 ДОБАВЬ ЭТО
             session = await sync_to_async(GameSession.objects.get)(code=self.code)
             await sync_to_async(session.refresh_from_db)()
             await self.send_current_question(session)
         elif data["type"] == "time_up":
             await self.handle_time_up()
+
     # =====================
     # Методи гри
     # =====================
 
-    async def start_game(self):
+    async def start_game(self, data):
         """Старт гри: редірект гравців і перше питання"""
         session = await sync_to_async(GameSession.objects.get)(code=self.code)
 
@@ -131,7 +151,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             # Start server-side timer for the room
             await self.start_question_timer(question.time_limit, False)
         else:
-            await self.show_final_results(session)
+            await self.broadcast_final_results(session)
 
     async def record_answer(self, data):
         """Записывает ответ игрока"""
@@ -171,8 +191,9 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def check_all_answered(self, question, player_name, is_correct):
         """Проверяет, все ли игроки ответили на вопрос"""
         session = await sync_to_async(GameSession.objects.get)(code=self.code)
-        total_players = await sync_to_async(lambda: session.players.count())()
-        answered_players = await sync_to_async(lambda: PlayerAnswer.objects.filter(question=question).count())()
+        # Враховуємо тільки тих гравців, які зараз онлайн
+        total_players = await sync_to_async(lambda: session.players.exclude(channel_name__isnull=True).exclude(channel_name="").count())()
+        answered_players = await sync_to_async(lambda: PlayerAnswer.objects.filter(question=question, player__session=session).count())()
 
         # Отправляем обновление счетчика ответов всем игрокам
         await self.channel_layer.group_send(
@@ -185,79 +206,113 @@ class GameConsumer(AsyncWebsocketConsumer):
         )
 
         if answered_players >= total_players:
-            # Cancel the timer if it's still running
-            if self.code in self.active_timers:
-                self.active_timers[self.code].cancel()
-                del self.active_timers[self.code]
-            await self.show_answer_and_next_question(session, question)
+            # Автоматично завершуємо питання, коли всі відповіли
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "cancel_timer_and_proceed",
+                    "question_id": question.id
+                }
+            )
 
-    async def show_answer_and_next_question(self, session, question):
-        """Показывает правильный ответ и переходит к следующему вопросу"""
-        # Cancel the timer if it exists
+    async def cancel_timer_and_proceed(self, event):
+        if self.is_host:
+            session = await sync_to_async(GameSession.objects.get)(code=self.code)
+            question = await sync_to_async(Question.objects.get)(id=event["question_id"])
+            await self.display_answer_chart(session, question)
+
+    async def handle_skip_question(self):
+        session = await sync_to_async(GameSession.objects.get)(code=self.code)
+        questions = await sync_to_async(lambda: list(session.quiz.questions.order_by('id')))()
+        if session.current_question_index < len(questions):
+            question = questions[session.current_question_index]
+            await self.display_answer_chart(session, question)
+
+    async def display_answer_chart(self, session, question):
+        """Показывает график ответов и правильный ответ (без перехода к следующему)"""
         if self.code in self.active_timers:
             self.active_timers[self.code].cancel()
             del self.active_timers[self.code]
 
-        # Получаем список вопросов
-        questions = await sync_to_async(lambda: list(session.quiz.questions.order_by('id')))()
-        current_index = session.current_question_index
-        next_index = current_index + 1
+        options = await sync_to_async(lambda: list(question.options.all()))()
+        chart_data = []
+        for opt in options:
+            votes = await sync_to_async(lambda o=opt: PlayerAnswer.objects.filter(question=question, selected_option=o, player__session=session).count())()
+            chart_data.append({
+                "id": opt.id,
+                "text": opt.text,
+                "is_correct": opt.is_correct,
+                "votes": votes
+            })
 
-        # Показываем правильный ответ
         correct_option = await sync_to_async(lambda: question.options.filter(is_correct=True).first())()
-        total_players = await sync_to_async(lambda: session.players.count())()
-        wait_time = 0.1 if total_players == 1 else 3  # Для одного игрока небольшая задержка для порядка сообщений
 
-        if next_index < len(questions):
-            # Инкрементируем индекс
-            session.current_question_index = next_index
-            await sync_to_async(session.save)()
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "show_answer_chart",
+                "chart_data": chart_data,
+                "correct_option": correct_option.text if correct_option else "No correct answer"
+            }
+        )
 
-            # Показываем правильный ответ
+    async def handle_next_phase(self, data):
+        """Хост нажимает 'Далее', переходим на следующий этап"""
+        session = await sync_to_async(GameSession.objects.get)(code=self.code)
+        current_phase = data.get("current_phase")
+        
+        if current_phase == "chart":
+            results = await self.get_leaderboard(session)
+            questions_count = await sync_to_async(lambda: session.quiz.questions.count())()
+            is_last = (session.current_question_index + 1) >= questions_count
+            
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
-                    "type": "show_answer",
-                    "correct_option": correct_option.text if correct_option else "No correct answer",
-                    "wait_time": wait_time
+                    "type": "show_leaderboard",
+                    "leaderboard": results,
+                    "is_last_question": is_last
                 }
             )
+        elif current_phase == "leaderboard":
+            questions = await sync_to_async(lambda: list(session.quiz.questions.order_by('id')))()
+            next_index = session.current_question_index + 1
+            
+            if next_index < len(questions):
+                session.current_question_index = next_index
+                await sync_to_async(session.save)()
+                
+                next_question = questions[next_index]
+                options = await sync_to_async(lambda: list(next_question.options.all()))()
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "show_question",
+                        "question": next_question.text,
+                        "options": [{"id": o.id, "text": o.text} for o in options],
+                        "time_limit": next_question.time_limit
+                    }
+                )
+                await self.start_question_timer(next_question.time_limit, force_restart=True)
+            else:
+                await self.broadcast_final_results(session)
 
-            # Ждем немного для порядка сообщений
-            await sleep(wait_time)
-
-            # Отправляем следующий вопрос
-            next_question = questions[next_index]
-            options = await sync_to_async(lambda: list(next_question.options.all()))()
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "show_question",
-                    "question": next_question.text,
-                    "options": [{"id": o.id, "text": o.text} for o in options],
-                    "time_limit": next_question.time_limit
-                }
-            )
-
-            # Start timer for the next question
-            await self.start_question_timer(next_question.time_limit, force_restart=True)
-        else:
-            # Вопросы закончились, показываем результаты
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "show_answer",
-                    "correct_option": correct_option.text if correct_option else "No correct answer",
-                    "wait_time": wait_time
-                }
-            )
-
-            await sleep(wait_time)
-            await self.show_final_results(session)
+    async def get_leaderboard(self, session):
+        players = await sync_to_async(lambda: list(Player.objects.filter(session=session).order_by('-correct_answers')[:5]))()
+        results = []
+        for p in players:
+            results.append({"name": p.name, "correct": p.correct_answers, "total": session.current_question_index + 1})
+        return results
 
     async def broadcast_players(self):
         """Надсилає актуальний список гравців (БЕЗ ХОСТА)"""
-        players = await sync_to_async(lambda: list(Player.objects.filter(session__code=self.code).values_list("name", flat=True)))()
+        # Отримуємо тільки тих гравців, у яких є активний channel_name
+        players = await sync_to_async(lambda: list(
+            Player.objects.filter(session__code=self.code)
+            .exclude(channel_name__isnull=True)
+            .exclude(channel_name="")
+            .values_list('name', flat=True)
+        ))()
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -324,6 +379,20 @@ class GameConsumer(AsyncWebsocketConsumer):
             "players": event["players"]
         }))
 
+    async def show_answer_chart(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "show_answer_chart",
+            "chart_data": event["chart_data"],
+            "correct_option": event["correct_option"]
+        }))
+
+    async def show_leaderboard(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "show_leaderboard",
+            "leaderboard": event["leaderboard"],
+            "is_last_question": event.get("is_last_question", False)
+        }))
+
     async def show_answer(self, event):
         await self.send(text_data=json.dumps({
             "type": "answer",
@@ -331,7 +400,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             "wait_time": event.get("wait_time", 3)
         }))
 
-    async def show_final_results(self, session):
+    async def broadcast_final_results(self, session):
         """Показывает финальные результаты игры"""
         players = await sync_to_async(lambda: list(session.players.all().order_by('-correct_answers')))()
         total_questions = await sync_to_async(lambda: session.quiz.questions.count())()
@@ -346,22 +415,24 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                "type": "final_results",
+                "type": "show_final_results",
                 "results": results
             }
         )
 
-    async def final_results(self, event):
+    async def show_final_results(self, event):
         await self.send(text_data=json.dumps({
-            "type": "results",
+            "type": "show_final_results",
             "results": event["results"]
         }))
 
     async def kicked(self, event):
-        await self.send(text_data=json.dumps({
-            "type": "kicked",
-            "message": event["message"]
-        }))
+        if self.player and self.player.name == event.get("kicked_player_name"):
+            await self.send(text_data=json.dumps({
+                "type": "kicked",
+                "message": event["message"]
+            }))
+            await self.close()
 
     async def answers_update(self, event):
         await self.send(text_data=json.dumps({
@@ -381,8 +452,11 @@ class GameConsumer(AsyncWebsocketConsumer):
             return  # Timer already running, don't restart
 
         async def timer_task():
-            await asyncio.sleep(time_limit)
-            await self.handle_time_up()
+            try:
+                await asyncio.sleep(time_limit)
+                await self.handle_time_up()
+            except asyncio.CancelledError:
+                pass
 
         # Cancel any existing timer for this room
         if self.code in self.active_timers:
@@ -394,6 +468,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def handle_time_up(self):
         """Обработка истечения времени на вопрос"""
+        # Remove timer from active_timers so check_all_answered doesn't trigger twice
+        if self.code in self.active_timers:
+            del self.active_timers[self.code]
+
         # Send time up signal to all clients
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -402,4 +480,13 @@ class GameConsumer(AsyncWebsocketConsumer):
             }
         )
 
-        # Do not show answer yet, wait for all players to answer
+        # Wait a couple of seconds before moving on
+        await asyncio.sleep(2)
+
+        session = await sync_to_async(GameSession.objects.get)(code=self.code)
+        questions = await sync_to_async(lambda: list(session.quiz.questions.order_by('id')))()
+        current_index = session.current_question_index
+        
+        if current_index < len(questions):
+            question = questions[current_index]
+            await self.display_answer_chart(session, question)

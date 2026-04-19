@@ -190,7 +190,7 @@ window.addEventListener("load", () => {
 
     // Створюємо WebSocket
     const socket = new WebSocket(
-        "ws://" + window.location.host + "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName)
+        "ws://" + window.location.host + "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName) + "&role=host"
     );
 
 
@@ -248,8 +248,102 @@ window.addEventListener("load", () => {
 
         if(data.type === "game_started") {
             console.log("GAME STARTED");
-            // Тут можна робити редірект або показати питання
         }
+
+        if (data.type === "question") {
+            // Hide lobby
+            document.querySelector(".players-section").style.display = "none";
+            document.querySelector(".game-code").style.display = "none";
+            if (startBtn) startBtn.style.display = "none";
+
+            currentPhase = "question";
+            questionBox.innerHTML = `
+                <h2>${data.question}</h2>
+                <div style="font-size: 30px; margin: 20px 0;" id="timerDisplay">${data.time_limit}</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;" id="optionsGrid">
+                    ${data.options.map(opt => `<div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px;">${opt.text}</div>`).join('')}
+                </div>
+                <div style="margin-top: 30px;">
+                    <button class="start-btn" style="background: #ff69b4; font-size: 18px; padding: 10px 20px;" onclick="skipQuestion()">Пропустити питання</button>
+                </div>
+            `;
+            startHostTimer(data.time_limit);
+        }
+
+        if (data.type === "show_answer_chart") {
+            if (hostTimerInterval) clearInterval(hostTimerInterval);
+            currentPhase = "chart";
+            const maxVotes = Math.max(...data.chart_data.map(d => d.votes), 1);
+            
+            questionBox.innerHTML = `
+                <h2 style="color: #4CAF50;">Правильний варіант: ${data.correct_option}</h2>
+                <div style="display: flex; justify-content: center; align-items: flex-end; height: 200px; gap: 20px; margin-top: 40px; border-bottom: 2px solid white; padding-bottom: 10px;">
+                    ${data.chart_data.map(opt => `
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 100px;">
+                            <div style="font-size: 24px; margin-bottom: 5px;">${opt.votes}</div>
+                            <div style="width: 60px; height: ${Math.max((opt.votes / maxVotes) * 150, 5)}px; background: ${opt.is_correct ? '#4CAF50' : '#ff69b4'}; border-radius: 5px 5px 0 0; transition: height 0.5s;"></div>
+                            <div style="margin-top: 10px; font-size: 14px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${opt.text}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="start-btn" style="margin-top: 40px;" onclick="nextPhase()">Далі</button>
+            `;
+        }
+
+        if (data.type === "show_leaderboard") {
+            currentPhase = "leaderboard";
+            const btnText = data.is_last_question ? "Показати результати" : "Наступне питання";
+            questionBox.innerHTML = `
+                <h2>Таблиця лідерів (Топ 5)</h2>
+                <ul style="list-style: none; padding: 0; max-width: 400px; margin: 30px auto;">
+                    ${data.leaderboard.map((p, i) => `
+                        <li style="background: ${i === 0 ? 'linear-gradient(45deg, #ffd700, #ffa500)' : 'rgba(255,255,255,0.1)'}; padding: 15px; margin: 10px 0; border-radius: 10px; display: flex; justify-content: space-between; font-size: 20px; font-weight: bold;">
+                            <span>${i+1}. ${p.name}</span>
+                            <span>${p.correct}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+                <button class="start-btn" style="margin-top: 20px;" onclick="nextPhase()">${btnText}</button>
+            `;
+        }
+
+        if (data.type === "show_final_results") {
+            questionBox.innerHTML = `
+                <h1 style="color: #ffd700; font-size: 60px;">Гру завершено!</h1>
+                <h2>Фінальна таблиця лідерів</h2>
+                <ul style="list-style: none; padding: 0; max-width: 400px; margin: 30px auto;">
+                    ${data.results.map((p, i) => `
+                        <li style="background: ${i === 0 ? 'linear-gradient(45deg, #ffd700, #ffa500)' : 'rgba(255,255,255,0.1)'}; padding: 15px; margin: 10px 0; border-radius: 10px; display: flex; justify-content: space-between; font-size: 20px; font-weight: bold;">
+                            <span>${i+1}. ${p.name}</span>
+                            <span>${p.correct}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+                <a href="/" style="display: inline-block; margin-top: 30px; background: #4CAF50; color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 20px;">Завершити</a>
+            `;
+        }
+    };
+
+    let hostTimerInterval;
+    let currentPhase = "lobby";
+
+    function startHostTimer(timeLimit) {
+        if (hostTimerInterval) clearInterval(hostTimerInterval);
+        let timeLeft = timeLimit;
+        const display = document.getElementById("timerDisplay");
+        hostTimerInterval = setInterval(() => {
+            timeLeft--;
+            if (display) display.innerText = timeLeft;
+            if (timeLeft <= 0) clearInterval(hostTimerInterval);
+        }, 1000);
+    }
+
+    window.nextPhase = function() {
+        socket.send(JSON.stringify({ type: "next_phase", current_phase: currentPhase }));
+    };
+
+    window.skipQuestion = function() {
+        socket.send(JSON.stringify({ type: "skip_question" }));
     };
 
     socket.onclose = () => console.log("WebSocket CLOSED");
