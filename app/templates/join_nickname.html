@@ -55,6 +55,11 @@
 </head>
 <body>
     <div class="container">
+        {% if error %}
+            <div style="background-color: rgba(255, 0, 0, 0.7); color: white; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: bold;">
+                {{ error }}
+            </div>
+        {% endif %}
         <form method="post">
             {% csrf_token %}
             <input type="text" name="name" placeholder="Ваш нік-нейм" required>

@@ -159,7 +159,13 @@
         <div class="game-code">{{ session.code }}</div>
 
         <div class="players-section">
-            <div class="players-title" id="playersTitle">Гравці:</div>
+            <!-- 👉 Стилізований лічильник для хоста -->
+            <div style="margin-bottom: 20px;">
+                <div style="font-size: 18px; background: rgba(255, 255, 255, 0.1); display: inline-block; padding: 8px 25px; border-radius: 50px; border: 1px solid rgba(138, 43, 226, 0.3); color: #ff69b4; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    Учасників: <span id="hostPlayerCount" style="color: white; font-size: 22px;">0</span>
+                </div>
+            </div>
+            <div class="players-title" id="playersTitle">Список гравців:</div>
             <ul id="players">
                 {% for player in session.players.all %}
                     <li>{{ player.name }}</li>
@@ -210,6 +216,12 @@ window.addEventListener("load", () => {
     if (data.type === "players") {
         playersInLobby = data.players; // ← ОЦЕ ГОЛОВНЕ
         console.log("Players in lobby:", playersInLobby.length);
+        
+        // Оновлюємо лічильник
+        const hostCountSpan = document.getElementById("hostPlayerCount");
+        if (hostCountSpan) {
+            hostCountSpan.innerText = data.players.length;
+        }
     }
 
         if(data.type === "players" && playersList) {

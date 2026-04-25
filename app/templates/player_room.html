@@ -124,6 +124,14 @@
     <div class="lobby-container">
         <h1>Лоббі гравця</h1>
         <div class="game-code">{{ session.code }}</div>
+        
+        <!-- 👉 Стилізований лічильник гравців (тепер під кодом) -->
+        <div style="margin-bottom: 30px;">
+            <div style="font-size: 18px; background: rgba(255, 255, 255, 0.1); display: inline-block; padding: 8px 25px; border-radius: 50px; border: 1px solid rgba(138, 43, 226, 0.3); color: #ff69b4; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                Гравців у лоббі: <span id="playerCount" style="color: white; font-size: 22px;">0</span>
+            </div>
+        </div>
+
         <div class="waiting-message pulse">Очікуємо початку гри...</div>
         <div id="question"></div>
         <div id="answers"></div>
@@ -147,6 +155,13 @@ console.error("WebSocket ERROR", e);
 
 socket.onmessage = function(event) {
     const data = JSON.parse(event.data);
+
+    if (data.type === "players") {
+        const playerCountSpan = document.getElementById("playerCount");
+        if (playerCountSpan) {
+            playerCountSpan.innerText = data.players.length;
+        }
+    }
 
     if (data.type === "show_question") {
         // Скрываем сообщение ожидания

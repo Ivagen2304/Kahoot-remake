@@ -141,13 +141,18 @@ def player_room(request, code):
 
 def enter_nickname(request, code):
     session = get_object_or_404(GameSession, code=code, is_active=True)
+    error = None
     if request.method == 'POST':
         name = request.POST.get('name')
         if name:
-            player, created = Player.objects.get_or_create(session=session, name=name)
-            request.session["player_id"] = player.id
-            return redirect("player_room", code)
-    return render(request, "join_nickname.html", {"code": code})
+            # 👉 ПЕРЕВІРКА: чи ім'я вже зайняте в цій сесії
+            if Player.objects.filter(session=session, name=name).exists():
+                error = f"Нікнейм '{name}' вже зайнятий в цій грі. Оберіть інший!"
+            else:
+                player = Player.objects.create(session=session, name=name)
+                request.session["player_id"] = player.id
+                return redirect("player_room", code)
+    return render(request, "join_nickname.html", {"code": code, "error": error})
 
 def test_play(request, code):
     session = get_object_or_404(GameSession, code=code)

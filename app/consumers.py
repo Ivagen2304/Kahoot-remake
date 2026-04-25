@@ -138,13 +138,19 @@ class GameConsumer(AsyncWebsocketConsumer):
             question = questions[current_index]
             options = await sync_to_async(lambda: list(question.options.all()))()
 
+            # 👉 Перевіряємо, чи цей конкретний гравець вже відповів
+            already_answered = False
+            if self.player:
+                already_answered = await sync_to_async(lambda: PlayerAnswer.objects.filter(player=self.player, question=question).exists())()
+
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     "type": "show_question",
                     "question": question.text,
                     "options": [{"id": o.id, "text": o.text} for o in options],
-                    "time_limit": question.time_limit
+                    "time_limit": question.time_limit,
+                    "already_answered": already_answered # Передаємо статус кожному індивідуально
                 }
             )
 
@@ -363,7 +369,8 @@ class GameConsumer(AsyncWebsocketConsumer):
             "type": "question",
             "question": event["question"],
             "options": event["options"],
-            "time_limit": event["time_limit"]
+            "time_limit": event["time_limit"],
+            "already_answered": event.get("already_answered", False) # Приймаємо статус
         }))
 
 
