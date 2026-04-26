@@ -8,14 +8,16 @@
     <style>
         body {
             margin: 0;
-            height: 100vh;
-            background-image: url("{% static 'Home_bg.png' %}");
+            min-height: 100vh;
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("{% static 'Home_bg.png' %}");
             background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: Arial, sans-serif;
-            color: white;
+            color: #8a2be2;
         }
 
         .container {
@@ -27,45 +29,287 @@
             margin-bottom: 40px;
         }
 
-        input {
+        input#nameInput {
+            padding: 15px 25px;
+            font-size: 22px;
+            width: 100%;
+            max-width: 350px;
+            margin-bottom: 25px;
+            border: 2px solid rgba(138, 43, 226, 0.5);
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border-radius: 15px;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        input#nameInput:focus {
+            border-color: #ff69b4;
+            box-shadow: 0 0 15px rgba(255, 105, 180, 0.4);
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .avatar-editor {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 25px;
+            border-radius: 25px;
+            border: 1px solid rgba(138, 43, 226, 0.4);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .category-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .category-label {
+            font-weight: bold;
+            color: #8a2be2;
+            width: 90px;
+            text-align: left;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .option-name {
+            flex-grow: 1;
+            background: rgba(138, 43, 226, 0.15);
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 16px;
+            color: white;
+            font-weight: bold;
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+
+        .avatar-preview-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .avatar-display {
+            width: 160px;
+            height: 160px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            border: 4px solid #8a2be2;
             padding: 15px;
-            font-size: 24px;
-            width: 300px;
-            margin-bottom: 20px;
-            border: none;
-            border-radius: 8px;
-        }
-
-        button {
-            padding: 15px 30px;
-            font-size: 24px;
-            background-color: #3cff00;
-            color: #000;
-            border: none;
-            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(138, 43, 226, 0.4);
             cursor: pointer;
-            transition: transform 0.2s, opacity 0.2s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
         }
 
-        button:hover {
-            transform: scale(1.05);
-            opacity: 0.9;
+        .avatar-display:hover {
+            transform: scale(1.08) rotate(5deg);
+            border-color: #ff69b4;
+            box-shadow: 0 0 50px rgba(255, 105, 180, 0.5);
+        }
+
+        .arrow-btn {
+            background: #8a2be2;
+            color: white;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .arrow-btn:hover {
+            background: #ff69b4;
+            transform: scale(1.15);
+            box-shadow: 0 6px 15px rgba(255, 105, 180, 0.4);
+        }
+
+        button.submit-btn {
+            padding: 18px 70px;
+            font-size: 26px;
+            background: linear-gradient(45deg, #8a2be2, #ff69b4);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 900;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-top: 10px;
+        }
+
+        button.submit-btn:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(138, 43, 226, 0.6);
         }
     </style>
 </head>
 <body>
+    <!-- Фонова музика лоббі -->
+    <audio id="lobbyMusic" loop autoplay>
+        <source src="https://archive.org/download/kahoot-lobby-music/Kahoot%20Lobby%20Music.mp3" type="audio/mpeg">
+    </audio>
+
     <div class="container">
+        <h1 style="color: white; text-shadow: 0 0 20px #8a2be2; font-weight: 900; font-size: 3.5rem; margin-bottom: 40px;">СТВОРИ СВОГО ГЕРОЯ</h1>
+        
         {% if error %}
-            <div style="background-color: rgba(255, 0, 0, 0.7); color: white; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: bold;">
+            <div style="background-color: rgba(255, 0, 0, 0.8); color: white; padding: 15px; border-radius: 12px; margin-bottom: 25px; font-weight: bold; border: 1px solid white;">
                 {{ error }}
             </div>
         {% endif %}
-        <form method="post">
+
+        <form method="post" onsubmit="return validateForm()">
             {% csrf_token %}
-            <input type="text" name="name" placeholder="Ваш нік-нейм" required>
-            <br>
-            <button type="submit">Приєднатись</button>
+            
+            <div class="avatar-preview-container">
+                <div class="avatar-display" onclick="randomize()">
+                    <img id="avatarImg" src="https://api.dicebear.com/9.x/avataaars/svg?top=shortFlat&eyes=default&mouth=default&clothing=shirtCrewNeck" alt="Avatar" style="width: 100%; height: 100%;">
+                </div>
+            </div>
+
+            <div class="avatar-editor">
+                <div class="category-row">
+                    <span class="category-label">Волосся</span>
+                    <button type="button" class="arrow-btn" onclick="changePart('top', -1)">❮</button>
+                    <span class="option-name" id="topName">Коротке</span>
+                    <button type="button" class="arrow-btn" onclick="changePart('top', 1)">❯</button>
+                </div>
+                <div class="category-row">
+                    <span class="category-label">Очі</span>
+                    <button type="button" class="arrow-btn" onclick="changePart('eyes', -1)">❮</button>
+                    <span class="option-name" id="eyesName">Звичайні</span>
+                    <button type="button" class="arrow-btn" onclick="changePart('eyes', 1)">❯</button>
+                </div>
+                <div class="category-row">
+                    <span class="category-label">Рот</span>
+                    <button type="button" class="arrow-btn" onclick="changePart('mouth', -1)">❮</button>
+                    <span class="option-name" id="mouthName">Спокійний</span>
+                    <button type="button" class="arrow-btn" onclick="changePart('mouth', 1)">❯</button>
+                </div>
+                <div class="category-row">
+                    <span class="category-label">Одяг</span>
+                    <button type="button" class="arrow-btn" onclick="changePart('clothing', -1)">❮</button>
+                    <span class="option-name" id="clothingName">Футболка</span>
+                    <button type="button" class="arrow-btn" onclick="changePart('clothing', 1)">❯</button>
+                </div>
+            </div>
+
+            <input type="hidden" name="avatar" id="avatarInput" value="top=shortFlat&eyes=default&mouth=default&clothing=shirtCrewNeck">
+            <input type="text" name="name" id="nameInput" placeholder="Твій нік" required maxlength="15" autocomplete="off">
+            <button type="submit" class="submit-btn">ГОТОВО!</button>
         </form>
     </div>
+
+    <script>
+        const parts = {
+            top: [
+                { val: 'shortFlat', name: 'Класична' },
+                { val: 'theCaesar', name: 'Цезар' },
+                { val: 'shortWaved', name: 'Хвиляста' },
+                { val: 'shaggy', name: 'Кошлата' },
+                { val: 'bob', name: 'Каре' },
+                { val: 'curly', name: 'Кучері' },
+                { val: 'bigHair', name: 'Об’ємна довга' },
+                { val: 'dreads', name: 'Дреди' },
+                { val: 'hat', name: 'Кепка' }
+            ],
+            eyes: [
+                { val: 'default', name: 'Звичайні' },
+                { val: 'happy', name: 'Веселі' },
+                { val: 'closed', name: 'Закриті' },
+                { val: 'squint', name: 'Примружені' },
+                { val: 'wink', name: 'Підморгує' },
+                { val: 'hearts', name: 'Сердечка' }
+            ],
+            mouth: [
+                { val: 'default', name: 'Спокійний' },
+                { val: 'smile', name: 'Посмішка' },
+                { val: 'sad', name: 'Сумний' },
+                { val: 'screamOpen', name: 'Крик' },
+                { val: 'tongue', name: 'Язик' },
+                { val: 'serious', name: 'Серйозний' }
+            ],
+            clothing: [
+                { val: 'shirtCrewNeck', name: 'Футболка' },
+                { val: 'shirtScoopNeck', name: 'З вирізом' },
+                { val: 'hoodie', name: 'Худі' },
+                { val: 'overall', name: 'Майка' },
+                { val: 'collarAndSweater', name: 'Джемпер' },
+                { val: 'blazerAndSweater', name: 'Піджак' }
+            ]
+        };
+
+        const currentSelection = {
+            top: 0,
+            eyes: 0,
+            mouth: 0,
+            clothing: 0
+        };
+
+        function updateAvatar() {
+            const query = `top=${parts.top[currentSelection.top].val}&eyes=${parts.eyes[currentSelection.eyes].val}&mouth=${parts.mouth[currentSelection.mouth].val}&clothing=${parts.clothing[currentSelection.clothing].val}`;
+            document.getElementById('avatarImg').src = `https://api.dicebear.com/9.x/avataaars/svg?${query}`;
+            document.getElementById('avatarInput').value = query;
+            
+            // Оновлюємо назви в інтерфейсі
+            document.getElementById('topName').innerText = parts.top[currentSelection.top].name;
+            document.getElementById('eyesName').innerText = parts.eyes[currentSelection.eyes].name;
+            document.getElementById('mouthName').innerText = parts.mouth[currentSelection.mouth].name;
+            document.getElementById('clothingName').innerText = parts.clothing[currentSelection.clothing].name;
+        }
+
+        function changePart(type, dir) {
+            currentSelection[type] = (currentSelection[type] + dir + parts[type].length) % parts[type].length;
+            updateAvatar();
+            
+            const audio = document.getElementById('lobbyMusic');
+            if (audio && audio.paused) audio.play().catch(e => {});
+        }
+
+        function randomize() {
+            for (let key in currentSelection) {
+                currentSelection[key] = Math.floor(Math.random() * parts[key].length);
+            }
+            updateAvatar();
+        }
+
+        function validateForm() {
+            const name = document.getElementById('nameInput').value.trim();
+            if (name.length < 2) {
+                alert("Нік занадто короткий!");
+                return false;
+            }
+            return true;
+        }
+
+        document.body.addEventListener('click', function() {
+            const audio = document.getElementById('lobbyMusic');
+            if (audio && audio.paused) audio.play();
+        }, { once: true });
+    </script>
 </body>
 </html>

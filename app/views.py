@@ -93,7 +93,7 @@ def add_question(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
 
     if request.method == 'POST':
-        qform = QuestionForm(request.POST)
+        qform = QuestionForm(request.POST, request.FILES)
         formset = AnswerOptionFormSet(request.POST, prefix='answeroption_set')
         if qform.is_valid() and formset.is_valid():
             question = qform.save(commit=False)
@@ -106,6 +106,31 @@ def add_question(request, quiz_id):
         qform = QuestionForm()
         formset = AnswerOptionFormSet(prefix='answeroption_set')
     return render(request, 'add_question.html', {'qform': qform, 'formset': formset, 'quiz': quiz})
+
+
+@login_required
+def edit_question(request, quiz_id, question_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id, owner=request.user)
+    question = get_object_or_404(Question, id=question_id, quiz=quiz)
+
+    if request.method == 'POST':
+        qform = QuestionForm(request.POST, request.FILES, instance=question)
+        formset = AnswerOptionFormSet(request.POST, prefix='answeroption_set', instance=question)
+        if qform.is_valid() and formset.is_valid():
+            qform.save()
+            formset.save()
+            return redirect('quiz_detail', quiz_id=quiz.id)
+    else:
+        qform = QuestionForm(instance=question)
+        formset = AnswerOptionFormSet(prefix='answeroption_set', instance=question)
+
+    return render(request, 'add_question.html', {
+        'qform': qform,
+        'formset': formset,
+        'quiz': quiz,
+        'is_edit': True,
+        'question': question
+    })
 
 
 @login_required
@@ -144,19 +169,22 @@ def enter_nickname(request, code):
     error = None
     if request.method == 'POST':
         name = request.POST.get('name')
+        avatar = request.POST.get('avatar', 'Lucky')
         if name:
             # 👉 ПЕРЕВІРКА: чи ім'я вже зайняте в цій сесії
             if Player.objects.filter(session=session, name=name).exists():
                 error = f"Нікнейм '{name}' вже зайнятий в цій грі. Оберіть інший!"
             else:
-                player = Player.objects.create(session=session, name=name)
+                player = Player.objects.create(session=session, name=name, avatar=avatar)
                 request.session["player_id"] = player.id
                 return redirect("player_room", code)
     return render(request, "join_nickname.html", {"code": code, "error": error})
 
 def test_play(request, code):
     session = get_object_or_404(GameSession, code=code)
-    return render(request, "test_play.html", {"code": code, "session": session})
+    player_id = request.session.get("player_id")
+    player = Player.objects.filter(id=player_id).first()
+    return render(request, "test_play.html", {"code": code, "session": session, "player": player})
 
 
 @login_required
@@ -165,3 +193,9 @@ def delete_question(request, quiz_id, question_id):
     question = get_object_or_404(Question, id=question_id, quiz=quiz)
     question.delete()
     return redirect("quiz_detail", quiz_id=quiz.id)
+
+@login_required
+def delete_quiz(request, quiz_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id, owner=request.user)
+    quiz.delete()
+    return redirect("quiz_list")

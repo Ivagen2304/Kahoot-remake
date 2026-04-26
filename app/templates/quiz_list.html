@@ -6,12 +6,17 @@
     <title>{% block title %}Kahoot-remake{% endblock %}</title>
     <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             min-height: 100vh;
-            background-image: url("{% static 'Home_bg.png' %}");
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("{% static 'Home_bg.png' %}");
             background-size: cover;
             background-position: center;
+            background-attachment: fixed;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
             padding: 20px;
@@ -58,96 +63,142 @@
 
         .quizzes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+            align-items: stretch;
         }
 
         .quiz-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #8a2be2, #ff69b4);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
         .quiz-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .quiz-card:hover::before {
+            opacity: 1;
         }
 
         .quiz-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 10px;
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 12px;
             color: #fff;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            line-height: 1.2;
         }
 
         .quiz-description {
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.7);
             margin-bottom: 20px;
-            line-height: 1.5;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            flex-grow: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .quiz-meta {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .quiz-meta::before {
+            content: '📅';
         }
 
         .quiz-actions {
-            display: flex;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: auto;
         }
 
         .btn {
-            padding: 10px 20px;
-            border-radius: 25px;
+            padding: 12px 15px;
+            border-radius: 14px;
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 700;
             font-size: 0.9rem;
             transition: all 0.3s ease;
-            display: inline-block;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            background: #46178f;
             color: white;
+            box-shadow: 0 4px 0 #2d0e5c;
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
-            transform: translateY(-1px);
+            background: #541ca8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #2d0e5c;
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            background: #1368ce;
             color: white;
-            position: relative;
-            padding-left: 40px;
+            box-shadow: 0 4px 0 #0b4182;
         }
-
-        .btn-secondary::before {
-            content: '';
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 0;
-            height: 0;
-            border-left: 8px solid white;
-            border-top: 6px solid transparent;
-            border-bottom: 6px solid transparent;
-        }
-
 
         .btn-secondary:hover {
-            background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
-            transform: translateY(-1px);
+            background: #1a7ae9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #0b4182;
+        }
+
+        .btn-danger {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ff4d4d;
+            border: 1px solid rgba(255, 77, 77, 0.2);
+            margin-top: 15px;
+            width: 100%;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+            padding: 10px;
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 77, 77, 0.1);
+            border-color: #ff4d4d;
+            transform: none;
         }
 
         .empty-state {
@@ -243,8 +294,9 @@
                         </div>
                         <div class="quiz-actions">
                             <a href="{% url 'quiz_detail' quiz.id %}" class="btn btn-primary">📖 Відкрити</a>
-                            <a href="{% url 'create_session' quiz.id %}" class="btn btn-secondary">🎮 Запустити гру</a>
+                            <a href="{% url 'create_session' quiz.id %}" class="btn btn-secondary">🎮 Запустити</a>
                         </div>
+                        <a href="{% url 'delete_quiz' quiz.id %}" class="btn btn-danger" onclick="return confirm('Ви впевнені, що хочете видалити цю вікторину?')">🗑️ Видалити вікторину</a>
                     </div>
                 {% endfor %}
             </div>

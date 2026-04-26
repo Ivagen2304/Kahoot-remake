@@ -3,73 +3,88 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Kahoot-remake{% endblock %}</title>
+    <title>Додати питання - Kahoot-remake</title>
     <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #8a2be2;
+            --secondary: #ff69b4;
+            --success: #4CAF50;
+            --danger: #ff4d4d;
+            --bg-glass: rgba(255, 255, 255, 0.1);
+        }
+
         body {
             margin: 0;
             min-height: 100vh;
-            background-image: url("{% static 'Home_bg.png' %}");
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("{% static 'Home_bg.png' %}");
             background-size: cover;
             background-position: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-attachment: fixed;
+            font-family: 'Outfit', sans-serif;
             color: white;
-            padding: 20px;
+            padding: 40px 20px;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .page-header {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 30px;
             padding: 40px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            text-align: center;
+            position: relative;
         }
 
         .page-title {
             font-size: 2.5rem;
-            margin: 0 0 15px 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin: 0 0 10px 0;
+            font-weight: 700;
+            letter-spacing: -1px;
         }
 
         .quiz-info {
-            font-size: 1.1rem;
-            color: rgba(255, 255, 255, 0.8);
-            margin: 0;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .form-section {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 30px;
             padding: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             margin-bottom: 30px;
         }
 
         .section-title {
             font-size: 1.8rem;
-            margin: 0 0 30px 0;
-            color: white;
+            margin-bottom: 30px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+            font-weight: 700;
         }
 
-        .section-title::before {
-            content: "📝";
-            font-size: 1.5rem;
+        .form-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 20px;
         }
 
         .form-group {
@@ -78,363 +93,536 @@
 
         .form-label {
             display: block;
-            font-size: 1rem;
-            color: white;
-            margin-bottom: 8px;
-            font-weight: 500;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .form-input {
             width: 100%;
-            padding: 12px 15px;
-            border-radius: 10px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
             color: white;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            font-size: 1.05rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
+            font-family: inherit;
         }
 
         .form-input:focus {
             outline: none;
-            border-color: rgba(102, 126, 234, 0.8);
-            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--secondary);
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 15px rgba(255, 105, 180, 0.3);
         }
 
-        .form-input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
+        /* Hide standard Django clearable file input elements */
+        input[type="file"] ~ a, 
+        input[type="file"] ~ br,
+        input[name$="-clear"] {
+            display: none !important;
         }
 
-        .answer-form {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            padding-top: 50px;
-            margin-bottom: 15px;
+        .answers-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .answer-card {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 24px;
+            padding: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
+            transition: all 0.3s ease;
         }
 
-        .answer-number {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
+        .answer-card:focus-within {
+            border-color: var(--secondary);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .answer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .answer-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 10px;
             font-size: 0.8rem;
-            font-weight: bold;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
-        .remove-answer-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 25px;
-            height: 25px;
-            background: rgba(220, 53, 69, 0.8);
+        .remove-btn {
+            background: rgba(255, 77, 77, 0.2);
+            color: var(--danger);
             border: none;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            color: white;
-            font-size: 1rem;
-            font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all 0.2s;
         }
 
-        .remove-answer-btn:hover {
-            background: rgba(220, 53, 69, 1);
+        .remove-btn:hover {
+            background: var(--danger);
+            color: white;
             transform: scale(1.1);
         }
 
-        .checkbox-group {
+        .checkbox-wrapper {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 12px;
+            cursor: pointer;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+
+        .checkbox-wrapper:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .checkbox-input {
-            width: 18px;
-            height: 18px;
-            accent-color: #667eea;
+            width: 22px;
+            height: 22px;
+            accent-color: var(--success);
+            cursor: pointer;
+        }
+
+        .error-alert {
+            background: rgba(255, 77, 77, 0.2);
+            border: 1px solid var(--danger);
+            color: #ffb3b3;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .form-footer {
+            display: flex;
+            gap: 20px;
+            margin-top: 40px;
         }
 
         .btn {
-            padding: 15px 25px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            display: inline-flex;
+            flex: 1;
+            padding: 18px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 12px;
             border: none;
             cursor: pointer;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s;
+            text-decoration: none;
             color: white;
+            font-family: inherit;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .actions-section {
+        .btn-add {
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 30px;
-            margin-top: 30px;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        .actions-title {
-            font-size: 1.5rem;
-            margin: 0 0 20px 0;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .btn-add:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
         }
 
-        .actions-title::before {
-            content: "⚡";
-            font-size: 1.3rem;
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 10px 20px rgba(138, 43, 226, 0.3);
         }
 
-        .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+        .btn-save:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(138, 43, 226, 0.5);
+            filter: brightness(1.1);
         }
 
-        .back-button {
+        .back-btn {
             position: fixed;
-            top: 20px;
-            left: 450px;
+            top: 40px;
+            left: 40px;
+            background: var(--bg-glass);
             width: 50px;
             height: 50px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
+            border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
             color: white;
             font-size: 1.5rem;
-            transition: all 0.3s ease;
-            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+            z-index: 100;
         }
 
-        .back-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        .back-btn:hover {
+            background: white;
+            color: var(--primary);
+            transform: translateX(-5px);
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-
-            .page-header,
-            .form-section,
-            .actions-section {
-                padding: 25px 20px;
-            }
-
-            .page-title {
-                font-size: 2rem;
-            }
-
-            .section-title {
-                font-size: 1.5rem;
-            }
-
-            .actions-grid {
+            .form-grid, .answers-container {
                 grid-template-columns: 1fr;
             }
+            .back-btn { top: 20px; left: 20px; }
         }
     </style>
 </head>
 <body>
-    <a href="{% url 'quiz_detail' quiz.id %}" class="back-button">⬅️</a>
+    <a href="{% url 'quiz_detail' quiz.id %}" class="back-btn">←</a>
+    
     <div class="container">
         <div class="page-header">
             <h1 class="page-title">Додати питання</h1>
             <p class="quiz-info">Вікторина: <strong>{{ quiz.title }}</strong></p>
         </div>
 
-        <form method="post" id="question-form">
+        {% if qform.errors or formset.errors %}
+        <div class="error-alert">
+            <strong>⚠️ Виникли помилки при збереженні:</strong>
+            <ul style="margin: 10px 0 0 20px; padding: 0;">
+                {% for field, errors in qform.errors.items %}
+                    <li>{{ field }}: {{ errors.0 }}</li>
+                {% endfor %}
+                {% for form in formset %}
+                    {% for field, errors in form.errors.items %}
+                        <li>Варіант {{ forloop.parentloop.counter }}: {{ errors.0 }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="post" id="question-form" enctype="multipart/form-data">
             {% csrf_token %}
 
             <div class="form-section">
-                <h2 class="section-title">Питання</h2>
-
+                <h2 class="section-title"><span>📝</span> Основна інформація</h2>
+                
                 <div class="form-group">
-                    <label for="{{ qform.text.id_for_label }}" class="form-label">{{ qform.text.label }}</label>
+                    <label class="form-label">Текст питання</label>
                     {{ qform.text }}
                 </div>
 
-                <div class="form-group">
-                    <label for="{{ qform.time_limit.id_for_label }}" class="form-label">{{ qform.time_limit.label }}</label>
-                    {{ qform.time_limit }}
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Тип питання</label>
+                        {{ qform.question_type }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Час (сек)</label>
+                        {{ qform.time_limit }}
+                    </div>
                 </div>
             </div>
 
             <div class="form-section">
-                <h2 class="section-title">Варіанти відповіді</h2>
+                <h2 class="section-title"><span>📸</span> Зображення (опціонально)</h2>
+                <div class="form-group">
+                    <label class="form-label">Виберіть картинку для питання</label>
+                    {{ qform.image }}
+                </div>
+                <div id="image-preview-container" 
+                     style="{% if qform.instance.image %}display: block;{% else %}display: none;{% endif %} margin-top: 20px; text-align: center; position: relative;">
+                    <p class="form-label">Попередній перегляд:</p>
+                    <div style="position: relative; display: inline-block;">
+                        <img id="image-preview" 
+                             src="{% if qform.instance.image %}{{ qform.instance.image.url }}{% else %}#{% endif %}" 
+                             alt="Preview" 
+                             style="max-width: 100%; max-height: 300px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: zoomIn 0.3s ease-out;">
+                        <button type="button" id="remove-image-btn" style="position: absolute; top: 10px; right: 10px; background: rgba(255, 77, 77, 0.9); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all 0.2s;">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-                <div id="answers-formset">
-                    {{ formset.management_form }}
-
-                    <!-- Template for new answer forms -->
-                    <div id="answer-template" class="answer-form" style="display: none;">
-                        <span class="answer-number">1</span>
-                        <button type="button" class="remove-answer-btn" onclick="removeAnswer(this)">×</button>
-                        <div class="form-group">
-                            <label class="form-label">Текст відповіді</label>
-                            <input type="text" class="form-input" name="answeroption_set-__prefix__-text" id="id_answeroption_set-__prefix__-text" placeholder="Введіть варіант відповіді">
+            <div class="form-section">
+                <h2 class="section-title"><span>✨</span> Варіанти відповідей</h2>
+                
+                {{ formset.management_form }}
+                <div class="answers-container" id="formset-container">
+                    {% for form in formset %}
+                    <div class="answer-card" data-form-index="{{ forloop.counter0 }}">
+                        {% for hidden in form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+                        
+                        <div class="answer-header">
+                            <span class="answer-badge">Варіант {{ forloop.counter }}</span>
+                            {% if forloop.counter > 2 %}
+                            <button type="button" class="remove-btn" onclick="removeForm(this)">×</button>
+                            {% endif %}
                         </div>
-                        <div class="checkbox-group">
-                            <label class="form-label">
-                                <input type="checkbox" class="checkbox-input" name="answeroption_set-__prefix__-is_correct" id="id_answeroption_set-__prefix__-is_correct">
-                                Правильна відповідь
-                            </label>
+
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            {{ form.text }}
+                        </div>
+
+                        <label class="checkbox-wrapper is-correct-group">
+                            {{ form.is_correct }}
+                            <span class="form-label" style="margin: 0;">Правильна відповідь</span>
+                        </label>
+
+                        <div class="puzzle-order-group" style="display: none; align-items: center; gap: 10px; margin-top: 10px;">
+                            <span class="form-label" style="margin: 0;">Порядок:</span>
+                            {{ form.order }}
                         </div>
                     </div>
-
-                    {% for form in formset %}
-                        <div class="answer-form" data-form-index="{{ forloop.counter0 }}">
-                            <span class="answer-number">{{ forloop.counter }}</span>
-                            {% if forloop.counter > 2 %}
-                                <button type="button" class="remove-answer-btn" onclick="removeAnswer(this)">×</button>
-                            {% endif %}
-
-                            <div class="form-group">
-                                <label for="{{ form.text.id_for_label }}" class="form-label">Текст відповіді</label>
-                                {{ form.text }}
-                            </div>
-
-                            <div class="checkbox-group">
-                                <label class="form-label" for="{{ form.is_correct.id_for_label }}">
-                                    {{ form.is_correct }}
-                                    Правильна відповідь
-                                </label>
-                            </div>
-                        </div>
                     {% endfor %}
                 </div>
 
-                <div class="actions-section">
-                    <h3 class="actions-title">Дії</h3>
-                    <div class="actions-grid">
-                        <button type="button" id="add-answer-btn" class="btn btn-primary">
-                            ➕ Додати варіант відповіді
-                        </button>
-                        <button type="submit" class="btn btn-success">
-                            💾 Зберегти питання
-                        </button>
+                <!-- Template for Dynamic Adding -->
+                <template id="answer-template">
+                    <div class="answer-card">
+                        <div class="answer-header">
+                            <span class="answer-badge">Варіант __num__</span>
+                            <button type="button" class="remove-btn" onclick="removeForm(this)">×</button>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <input type="text" name="answeroption_set-__prefix__-text" class="form-input" placeholder="Введіть варіант відповіді">
+                        </div>
+                        <label class="checkbox-wrapper is-correct-group">
+                            <input type="checkbox" name="answeroption_set-__prefix__-is_correct" class="checkbox-input">
+                            <span class="form-label" style="margin: 0;">Правильна відповідь</span>
+                        </label>
+                        <div class="puzzle-order-group" style="display: none; align-items: center; gap: 10px; margin-top: 10px;">
+                            <span class="form-label" style="margin: 0;">Порядок:</span>
+                            <input type="number" name="answeroption_set-__prefix__-order" class="form-input" style="width: 60px; text-align: center;" value="0" min="0">
+                        </div>
                     </div>
+                </template>
+
+                <div class="form-footer">
+                    <button type="button" id="add-form-btn" class="btn btn-add">
+                        ➕ Додати варіант
+                    </button>
+                    <button type="submit" class="btn btn-save">
+                        💾 Зберегти питання
+                    </button>
                 </div>
             </div>
         </form>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const addBtn = document.getElementById("add-answer-btn");
-            const formsetDiv = document.getElementById("answers-formset");
-            const totalForms = document.querySelector("input[name='answeroption_set-TOTAL_FORMS']");
-            const template = document.getElementById("answer-template");
+        document.addEventListener("DOMContentLoaded", function() {
+            const container = document.getElementById("formset-container");
+            const addBtn = document.getElementById("add-form-btn");
+            const totalForms = document.getElementById("id_answeroption_set-TOTAL_FORMS");
+            const template = document.getElementById("answer-template").innerHTML;
+            const typeSelect = document.getElementById("id_question_type");
 
-            if (!addBtn || !formsetDiv || !totalForms || !template) {
-                console.error("Required elements not found");
-                return;
+            function updateFormLayout() {
+                const type = typeSelect.value;
+                const cards = document.querySelectorAll(".answer-card:not(.template)");
+                
+                // Скидаємо видимість кнопок за замовчуванням
+                addBtn.style.display = "flex";
+                
+                if (type === "true_false") {
+                    addBtn.style.display = "none";
+                    // Залишаємо лише 2 форми
+                    while (document.querySelectorAll(".answer-card").length > 2) {
+                        document.querySelector(".answer-card:last-child").remove();
+                    }
+                    while (document.querySelectorAll(".answer-card").length < 2) {
+                        addBtn.click();
+                    }
+                    
+                    const currentCards = document.querySelectorAll(".answer-card");
+                    const texts = ["Правда", "Брехня"];
+                    currentCards.forEach((card, idx) => {
+                        const input = card.querySelector("input[type='text']");
+                        input.value = texts[idx];
+                        input.readOnly = true;
+                        card.querySelector(".remove-btn")?.style.setProperty("display", "none");
+                        card.querySelector(".answer-badge").textContent = `Варіант: ${texts[idx]}`;
+                    });
+                    totalForms.value = 2;
+                } 
+                else if (type === "text_input") {
+                    addBtn.style.display = "none";
+                    while (document.querySelectorAll(".answer-card").length > 1) {
+                        document.querySelector(".answer-card:last-child").remove();
+                    }
+                    const card = document.querySelector(".answer-card");
+                    const input = card.querySelector("input[type='text']");
+                    input.placeholder = "Введіть ОДНУ правильну відповідь";
+                    input.readOnly = false;
+                    card.querySelector(".remove-btn")?.style.setProperty("display", "none");
+                    card.querySelector(".answer-badge").textContent = "Правильна відповідь";
+                    
+                    // Текстовий ввід завжди "правильний" за замовчуванням
+                    const checkbox = card.querySelector("input[type='checkbox']");
+                    checkbox.checked = true;
+                    checkbox.style.display = "none";
+                    card.querySelector(".checkbox-wrapper").style.display = "none";
+                    totalForms.value = 1;
+                }
+                else if (type === "puzzle") {
+                    addBtn.style.display = "flex";
+                    const currentCards = document.querySelectorAll(".answer-card");
+                    currentCards.forEach((card, idx) => {
+                        card.querySelector(".is-correct-group").style.display = "none";
+                        card.querySelector(".puzzle-order-group").style.display = "flex";
+                        const orderInput = card.querySelector("input[name*='order']");
+                        if (orderInput.value == "0") orderInput.value = idx + 1;
+                        
+                        const input = card.querySelector("input[type='text']");
+                        input.readOnly = false;
+                        card.querySelector(".remove-btn")?.style.setProperty("display", "flex");
+                        card.querySelector(".answer-badge").textContent = `Елемент ${idx + 1}`;
+                    });
+                }
+                else {
+                    // multiple_choice
+                    addBtn.style.display = "flex";
+                    const currentCards = document.querySelectorAll(".answer-card");
+                    currentCards.forEach((card, idx) => {
+                        card.querySelector(".is-correct-group").style.display = "flex";
+                        card.querySelector(".puzzle-order-group").style.display = "none";
+                        
+                        const input = card.querySelector("input[type='text']");
+                        if (input.readOnly) {
+                            input.value = "";
+                            input.readOnly = false;
+                        }
+                        input.placeholder = "Введіть варіант відповіді";
+                        card.querySelector(".remove-btn")?.style.setProperty("display", "flex");
+                        card.querySelector(".answer-badge").textContent = `Варіант ${idx + 1}`;
+                        card.querySelector(".checkbox-wrapper").style.display = "flex";
+                        card.querySelector("input[type='checkbox']").style.display = "block";
+                    });
+                }
             }
 
-            addBtn.addEventListener("click", function () {
-                const currentCount = parseInt(totalForms.value);
+            typeSelect.addEventListener("change", updateFormLayout);
+            
+            // Перший запуск при завантаженні
+            updateFormLayout();
 
-                // Створюємо нову форму на основі ШАБЛОНУ, щоб __prefix__ працював правильно
-                const templateForm = document.getElementById("answer-template");
-                const newForm = templateForm.cloneNode(true);
-                newForm.id = "";
-                newForm.style.display = "block";
+            addBtn.addEventListener("click", function() {
+                const count = parseInt(totalForms.value);
+                const newHtml = template
+                    .replace(/__prefix__/g, count)
+                    .replace(/__num__/g, count + 1);
+                
+                const wrapper = document.createElement("div");
+                wrapper.innerHTML = newHtml;
+                const newForm = wrapper.firstElementChild;
+                newForm.setAttribute("data-form-index", count);
+                
+                container.appendChild(newForm);
+                totalForms.value = count + 1;
 
-                // Оновлюємо всі __prefix__ на поточний індекс
-                newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, currentCount);
-
-                // Оновлюємо номер відповіді
-                const answerNumber = newForm.querySelector(".answer-number");
-                if (answerNumber) {
-                    answerNumber.textContent = currentCount + 1;
-                }
-
-                // Оновлюємо data-form-index
-                newForm.setAttribute("data-form-index", currentCount);
-
-                formsetDiv.appendChild(newForm);
-                totalForms.value = currentCount + 1;
+                // Важливо: оновлюємо макет після додавання нового елемента
+                updateFormLayout();
             });
+
+            // Preview image
+            const imageInput = document.querySelector('input[type="file"]');
+            const previewContainer = document.getElementById('image-preview-container');
+            const previewImage = document.getElementById('image-preview');
+
+            if (imageInput) {
+                imageInput.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewImage.src = e.target.result;
+                            previewContainer.style.display = 'block';
+                            
+                            // If we selected a new file, uncheck the "clear" checkbox if it exists
+                            const clearCheckbox = document.querySelector('input[name="image-clear"]');
+                            if (clearCheckbox) clearCheckbox.checked = false;
+                        }
+                        reader.readAsDataURL(file);
+                    } else {
+                        // Only hide if there's no existing image on the instance
+                        {% if not qform.instance.image %}
+                        previewContainer.style.display = 'none';
+                        {% endif %}
+                    }
+                });
+
+                const removeImageBtn = document.getElementById('remove-image-btn');
+                if (removeImageBtn) {
+                    removeImageBtn.addEventListener('click', function() {
+                        imageInput.value = ''; // Clear file input
+                        previewContainer.style.display = 'none';
+                        previewImage.src = '#';
+                        
+                        // Handle Django's clearable file input if it exists (for editing)
+                        const clearCheckbox = document.querySelector('input[name="image-clear"]');
+                        if (clearCheckbox) {
+                            clearCheckbox.checked = true;
+                        }
+                    });
+
+                    removeImageBtn.addEventListener('mouseover', function() {
+                        this.style.transform = 'scale(1.1) rotate(5deg)';
+                        this.style.background = '#ff4d4d';
+                    });
+                    removeImageBtn.addEventListener('mouseout', function() {
+                        this.style.transform = 'scale(1) rotate(0)';
+                        this.style.background = 'rgba(255, 77, 77, 0.9)';
+                    });
+                }
+            }
         });
 
-        function removeAnswer(button) {
-            const form = button.closest(".answer-form");
+        function removeForm(btn) {
+            const card = btn.closest(".answer-card");
             const totalForms = document.getElementById("id_answeroption_set-TOTAL_FORMS");
+            const count = parseInt(totalForms.value);
 
-            if (parseInt(totalForms.value) > 2) {
-                form.remove();
-                totalForms.value = parseInt(totalForms.value) - 1;
-
-                // Оновлюємо номери та індекси атрибутів інших форм
-                const forms = document.querySelectorAll(".answer-form:not(#answer-template)");
-                forms.forEach((form, index) => {
-                    const number = form.querySelector(".answer-number");
-                    if (number) {
-                        number.textContent = index + 1;
-                    }
-                    form.setAttribute("data-form-index", index);
-
-                    // Оновлюємо name та id атрибути для правильної індексації Django
-                    form.querySelectorAll("input, select, textarea").forEach(input => {
-                        if (input.name) input.name = input.name.replace(/-\d+-/, `-${index}-`);
-                        if (input.id) input.id = input.id.replace(/-\d+-/, `-${index}-`);
-                    });
-                    form.querySelectorAll("label").forEach(label => {
-                        const forAttr = label.getAttribute("for");
-                        if (forAttr) label.setAttribute("for", forAttr.replace(/-\d+-/, `-${index}-`));
+            if (count > 2) {
+                card.remove();
+                totalForms.value = count - 1;
+                
+                // Re-index remaining forms
+                const cards = document.querySelectorAll(".answer-card");
+                cards.forEach((c, idx) => {
+                    c.setAttribute("data-form-index", idx);
+                    c.querySelector(".answer-badge").textContent = `Варіант ${idx + 1}`;
+                    
+                    const inputs = c.querySelectorAll("input");
+                    inputs.forEach(input => {
+                        input.name = input.name.replace(/-\d+-/, `-${idx}-`);
+                        input.id = input.id.replace(/-\d+-/, `-${idx}-`);
                     });
                 });
             } else {
-                alert("Мінімальна кількість варіантів відповіді - 2");
+                alert("Має бути мінімум 2 варіанти!");
             }
         }
     </script>
-
 </body>
 </html>

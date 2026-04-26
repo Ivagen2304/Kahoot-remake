@@ -19,6 +19,11 @@ class RegisterForm(UserCreationForm):
 
 
 class QuizForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['title'].widget.attrs.update({'class': 'form-input', 'placeholder': 'Назва вашої вікторини (напр. Історія України)'})
+        self.fields['description'].widget.attrs.update({'class': 'form-input form-textarea', 'placeholder': 'Короткий опис, про що ця гра...'})
+
     class Meta:
         model = Quiz
         fields = ["title", "description"]
@@ -28,11 +33,13 @@ class QuestionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['text'].widget.attrs.update({'class': 'form-input', 'placeholder': 'Введіть питання'})
+        self.fields['image'].widget.attrs.update({'class': 'form-input'})
         self.fields['time_limit'].widget.attrs.update({'class': 'form-input'})
+        self.fields['question_type'].widget.attrs.update({'class': 'form-input'})
 
     class Meta:
         model = Question
-        fields = ["text", "time_limit"]
+        fields = ["text", "image", "question_type", "time_limit"]
 
 
 class AnswerOptionForm(forms.ModelForm):
@@ -40,11 +47,12 @@ class AnswerOptionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['text'].widget.attrs.update({'class': 'form-input', 'placeholder': 'Введіть варіант відповіді'})
         self.fields['is_correct'].widget.attrs['class'] = 'checkbox-input'
-        self.fields['is_correct'].label = 'Правильна відповідь'
+        self.fields['is_correct'].label = 'Правильна'
+        self.fields['order'].widget.attrs.update({'class': 'form-input', 'style': 'width: 60px; text-align: center;', 'min': '0'})
 
     class Meta:
         model = AnswerOption
-        fields = ["text", "is_correct"]
+        fields = ["text", "is_correct", "order"]
 
 AnswerOptionFormSet = inlineformset_factory(
     Question, AnswerOption, form=AnswerOptionForm, extra=2

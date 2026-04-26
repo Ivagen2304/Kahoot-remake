@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Гра почалась</title>
     <link rel="icon" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico">
@@ -8,20 +9,62 @@
         body {
             margin: 0;
             padding: 0;
-            height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            background-image: linear-gradient(rgba(0, 5, 25, 0.4), rgba(0, 5, 25, 0.4)), url("{% static 'Home_bg.png' %}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             font-family: 'Nunito', Arial, sans-serif;
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .game-container {
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.8),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            text-align: center;
+            max-width: 900px;
+            width: 95%;
+            position: relative;
             display: flex;
             flex-direction: column;
-            height: 100vh;
             justify-content: center;
             align-items: center;
-            padding: 20px;
             box-sizing: border-box;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            animation: fadeIn 0.5s ease-out;
+            z-index: 1;
+        }
+
+        .game-container::before {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: 34px;
+            padding: 4px;
+            background: linear-gradient(45deg, #8a2be2, #ff69b4, #ffffff71, #ff69b4, #8a2be2);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            background-size: 200% 200%;
+            animation: borderRotate 4s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes borderRotate {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .question-section {
@@ -32,15 +75,27 @@
         }
 
         #questionText {
-            font-size: 3rem;
-            font-weight: bold;
-            color: white;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 30px;
-            border-radius: 20px;
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: #8a2be2;
+            padding: 20px;
             margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.5s ease-in;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        /* Рамка тепер на game-container */
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         #timer {
@@ -111,6 +166,38 @@
             transform: none;
         }
 
+        /* Стилі для пазла */
+        .puzzle-square {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+
+        .answer-btn.selected .puzzle-square {
+            background: #4CAF50;
+            border-color: #fff;
+            transform: scale(1.1) rotate(-5deg);
+        }
+
+        .answer-btn.selected {
+            border: 3px solid #4CAF50 !important;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.4);
+        }
+
         #waitingBox {
             position: fixed;
             top: 0;
@@ -118,7 +205,8 @@
             width: 100vw;
             height: 100vh;
             background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(15px); /* Стеклянный эффект */
+            backdrop-filter: blur(15px);
+            /* Стеклянный эффект */
             -webkit-backdrop-filter: blur(15px);
             display: none;
             justify-content: center;
@@ -133,17 +221,21 @@
             animation: fadeIn 0.5s ease-out;
         }
 
-        .kahoot-logo-pulse {
-            width: 180px;
+        .waiting-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 4px solid #8a2be2;
             margin-bottom: 30px;
-            filter: drop-shadow(0 0 20px rgba(255,255,255,0.4));
-            animation: pulse-logo 2s infinite ease-in-out;
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.5);
+            animation: pulse-avatar 2s infinite ease-in-out;
         }
 
-        @keyframes pulse-logo {
-            0% { transform: scale(1); opacity: 0.9; }
-            50% { transform: scale(1.15); opacity: 1; }
-            100% { transform: scale(1); opacity: 0.9; }
+        @keyframes pulse-avatar {
+            0% { transform: scale(1); box-shadow: 0 0 20px rgba(138, 43, 226, 0.4); }
+            50% { transform: scale(1.1); box-shadow: 0 0 40px rgba(138, 43, 226, 0.7); }
+            100% { transform: scale(1); box-shadow: 0 0 20px rgba(138, 43, 226, 0.4); }
         }
 
         .progress-container {
@@ -153,7 +245,7 @@
             border-radius: 10px;
             margin: 20px auto;
             overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         #progressBar {
@@ -168,7 +260,62 @@
             font-size: 1.8rem;
             font-weight: 800;
             margin-bottom: 10px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Transition Overlay */
+        #typeTransition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(138, 43, 226, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            flex-direction: column;
+        }
+
+        .type-label {
+            font-size: 50px;
+            font-weight: 900;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            text-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+            animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            padding: 20px;
         }
 
         .participants-count {
@@ -183,33 +330,61 @@
             margin-top: 10px;
         }
 
+        .chart-container {
+            text-align: center;
+            width: 100%;
+            position: relative;
+            margin: 0 auto;
+        }
+
         #resultsBox {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: rgba(0, 0, 0, 0.4);
+            /* Прозорий фон для видимості основного */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 2000;
         }
 
         .results-content {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 40px;
-            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 50px;
+            border-radius: 40px;
             text-align: center;
-            max-width: 600px;
+            max-width: 700px;
             width: 90%;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(138, 43, 226, 0.4);
+            position: relative;
+        }
+
+        .results-content::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(45deg, #8a2be2, #ff69b4, #8a2be2);
+            border-radius: 45px;
+            z-index: -1;
+            opacity: 0.5;
+            animation: gradientShift 4s linear infinite;
         }
 
         .results-content h2 {
-            color: #333;
-            font-size: 2.5rem;
-            margin-bottom: 30px;
+            color: #ff69b4;
+            font-size: 3rem;
+            margin-bottom: 35px;
+            font-weight: 900;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
         }
 
         .results-table {
@@ -220,30 +395,49 @@
 
         .results-table th,
         .results-table td {
-            padding: 15px;
-            text-align: center;
-            border-bottom: 1px solid #ddd;
+            padding: 20px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .results-table th {
-            background: #f8f9fa;
-            color: #333;
-            font-weight: bold;
+            background: rgba(138, 43, 226, 0.2);
+            color: #ff69b4;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .results-table td {
-            color: #555;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         @media (max-width: 768px) {
@@ -265,6 +459,28 @@
 </head>
 
 <body data-code="{{ session.code }}">
+    <div id="playerStats"
+        style="position: fixed; top: 20px; left: 20px; z-index: 100; display: flex; gap: 15px; align-items: center;">
+        <div
+            style="background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); color: white;">
+            Очки: <span id="currentScore" style="font-weight: bold; color: #4CAF50;">0</span>
+        </div>
+        <div id="streakIndicator"
+            style="background: rgba(255,69,0,0.2); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(255,69,0,0.5); display: none; align-items: center; gap: 5px; color: white;">
+            🔥 <span id="currentStreak" style="font-weight: bold; color: #ff4500;">0</span>
+        </div>
+    </div>
+    <div id="typeTransition">
+        <div class="type-label" id="typeLabel">ПРИГОТУЙТЕСЬ...</div>
+    </div>
+
+    <!-- Аудіосупровід -->
+    <audio id="timerMusic">
+        <source src="https://www.myinstants.com/media/sounds/kahoot-music.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="winMusic">
+        <source src="https://www.myinstants.com/media/sounds/kahoot-win.mp3" type="audio/mpeg">
+    </audio>
     <div class="game-container">
         <div class="question-section">
             <div id="questionText"></div>
@@ -276,21 +492,18 @@
 
     <div id="waitingBox">
         <div class="waiting-content">
-            <!-- Pulsing Kahoot-style Logo -->
-            <svg class="kahoot-logo-pulse" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="45" fill="#46178f" />
-                <text x="50" y="65" font-family="Arial" font-size="40" fill="white" text-anchor="middle" font-weight="bold">K!</text>
-            </svg>
-            
-            <div class="waiting-text-premium">Відповідь прийнята!</div>
+            <!-- Pulsing Player Avatar -->
+            <img src="https://api.dicebear.com/9.x/avataaars/svg?{{ player.avatar }}" class="waiting-avatar" alt="Avatar">
+
+            <div id="waitingMessage" class="waiting-text-premium">Відповідь прийнята!</div>
             <div class="participants-count">
                 <span id="answeredCount">0</span> з <span id="totalCount">0</span> учасників відповіли
             </div>
-            
+
             <div class="progress-container">
                 <div id="progressBar"></div>
             </div>
-            
+
             <div style="font-style: italic; opacity: 0.7; margin-top: 15px;">
                 Ви — справжній профі! Чекаємо на інших...
             </div>
@@ -300,214 +513,414 @@
     <div id="resultsBox">
         <div class="results-content">
             <h2>Результати</h2>
-            <table class="results-table">
-                <thead>
-                    <tr>
-                        <th>Гравець</th>
-                        <th>Результат</th>
-                    </tr>
-                </thead>
-                <tbody id="resultsTable"></tbody>
-            </table>
-            <a href="/" style="display: inline-block; margin-top: 30px; background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; border: none; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; text-decoration: none; box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Повернутися на головну</a>
+            <div style="display: flex; justify-content: space-between; width: 100%; max-width: 600px; margin: 0 auto 10px auto; padding: 12px 20px; background: rgba(138, 43, 226, 0.2); border-radius: 12px; color: #ff69b4; text-transform: uppercase; font-size: 14px; font-weight: 900; letter-spacing: 2px; box-sizing: border-box;">
+                <span>Гравець</span>
+                <span>Результат</span>
+            </div>
+            <div id="resultsTable" style="width: 100%; max-width: 600px; margin: 0 auto;"></div>
+            <a href="/"
+                style="display: inline-block; margin-top: 30px; background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; border: none; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; text-decoration: none; box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); transition: transform 0.2s;"
+                onmouseover="this.style.transform='translateY(-2px)'"
+                onmouseout="this.style.transform='translateY(0)'">Повернутися на головну</a>
         </div>
     </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-    const code = "{{ session.code }}";
-    let storedName = sessionStorage.getItem("player_name") || localStorage.getItem("player_name");
-    const playerName = (storedName && storedName !== "null") ? storedName : "Player";
-    sessionStorage.setItem("player_name", playerName);
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const code = "{{ session.code }}";
+            let storedName = sessionStorage.getItem("player_name") || localStorage.getItem("player_name");
+            const playerName = (storedName && storedName !== "null") ? storedName : "Player";
+            sessionStorage.setItem("player_name", playerName);
 
-    let redirected = false;  // 👈 ФЛАГ
-    let timerInterval;  // Для таймера
-    let currentQuestionText = "";  // Для хранения текста вопроса
+            let redirected = false;  // 👈 ФЛАГ
+            let timerInterval;  // Для таймера
+            let currentQuestionText = "";  // Для хранения текста вопроса
 
-    const questionText = document.getElementById("questionText");
-    const answersBox = document.getElementById("answersBox");
-    const waitingBox = document.getElementById("waitingBox");
-    const resultsBox = document.getElementById("resultsBox");
-    const resultsTable = document.getElementById("resultsTable");
-    const timerDisplay = document.getElementById("timer");
-
-    const socket = new WebSocket(
-        "ws://" + window.location.host + "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName) + "&role=player"
-    );
-
-    socket.onopen = () => {
-        console.log("Socket opened on game page");
-        // 👇 ЗАПРОСИ ТЕКУЩИЙ ВОПРОС
-        socket.send(JSON.stringify({
-            type: "get_current_question"
-        }));
-    };
-
-    socket.onmessage = (event) => {
-        console.log("WebSocket connected");
-        const data = JSON.parse(event.data);
-        console.log(data);
-
-        if (data.type === "question") {
-             // Показати питання
             const questionText = document.getElementById("questionText");
-            currentQuestionText = data.question;
-            questionText.innerText = data.question;
-
-            // Показати кнопки відповідей
             const answersBox = document.getElementById("answersBox");
-            answersBox.innerHTML = ""; // очищаємо старі кнопки
+            const waitingBox = document.getElementById("waitingBox");
+            const resultsBox = document.getElementById("resultsBox");
+            const resultsTable = document.getElementById("resultsTable");
+            const timerDisplay = document.getElementById("timer");
 
-            data.options.forEach((option, index) => {
-                const btn = document.createElement("button");
-                btn.innerText = option.text;
-                btn.className = "answer-btn";
+            const socket = new WebSocket(
+                "ws://" + window.location.host + "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName) + "&role=player"
+            );
 
-                // При натисканні на кнопку — відправляємо відповідь
-                btn.onclick = () => sendAnswer(option.id);
+            socket.onopen = () => {
+                console.log("Socket opened on game page");
+                // 👇 ЗАПРОСИ ТЕКУЩИЙ ВОПРОС
+                socket.send(JSON.stringify({
+                    type: "get_current_question"
+                }));
+            };
 
-                answersBox.appendChild(btn);
-            });
+            socket.onmessage = (event) => {
+                console.log("WebSocket connected");
+                const data = JSON.parse(event.data);
+                console.log(data);
 
-            // Показати блоки питання і відповідей
-            answersBox.style.display = "grid";
-            document.querySelector('.question-section').style.display = "block";
+                if (data.type === "question") {
+                    const transition = document.getElementById("typeTransition");
+                    const label = document.getElementById("typeLabel");
+                    const rawType = data.question_type || "multiple_choice";
+                    const qType = rawType.trim().toLowerCase();
 
-            // Запустить таймер
-            if (data.time_limit) {
-                startTimer(data.time_limit);
-            }
+                    // Налаштовуємо текст переходу
+                    // Налаштовуємо текст переходу (синхронно з хостом)
+                    const typeMap = {
+                        'multiple_choice': 'Вибір варіанта',
+                        'true_false': 'Правда/Брехня',
+                        'puzzle': 'Пазл (Порядок)',
+                        'text_input': 'Ввід тексту'
+                    };
+                    label.innerText = typeMap[qType] || 'Наступне питання';
 
-            // 👉 ПЕРЕВІРКА: чи гравець вже відповів (для persistence)
-            if (data.already_answered) {
-                showWaiting();
-            }
-        }
+                    // Показуємо перехід
+                    transition.style.display = "flex";
 
-        if (data.type === "redirect") {
-            if (!redirected) {  // 👈 ПРОВЕРЯЕМ ФЛАГ
-                redirected = true;
-                window.location.href = data.url;
-                return;  // 👈 ВЫХОДИМ
-            }
-        }
+                    // Приховуємо все інше
+                    document.querySelector('.question-section').style.display = "none";
+                    answersBox.style.display = "none";
+                    waitingBox.style.display = "none";
+                    resultsBox.style.display = "none";
 
-        if (data.type === "waiting") {
-        document.getElementById("answersBox").style.display = "none";
-        document.getElementById("waitingBox").style.display = "block";
-        }
+                    setTimeout(() => {
+                        transition.style.display = "none";
+                        if (timerInterval) clearInterval(timerInterval);
 
-        if (data.type === "show_answer_chart") {
-            if (timerInterval) clearInterval(timerInterval);
-            waitingBox.style.display = "none";
-            
-            const maxVotes = Math.max(...data.chart_data.map(d => d.votes), 1);
-            answersBox.innerHTML = `
-                <h2 style="color: #4CAF50; font-size: 24px; text-align: center; margin-bottom: 30px;">Правильний варіант: ${data.correct_option}</h2>
-                <div style="display: flex; justify-content: center; align-items: flex-end; height: 150px; gap: 15px; margin-top: 20px; border-bottom: 2px solid rgba(255,255,255,0.5); padding-bottom: 10px;">
-                    ${data.chart_data.map(opt => `
-                        <div style="display: flex; flex-direction: column; align-items: center; width: 80px;">
-                            <div style="font-size: 20px; margin-bottom: 5px;">${opt.votes}</div>
-                            <div style="width: 50px; height: ${Math.max((opt.votes / maxVotes) * 120, 5)}px; background: ${opt.is_correct ? '#4CAF50' : '#ff69b4'}; border-radius: 5px 5px 0 0; transition: height 0.5s;"></div>
-                            <div style="margin-top: 10px; font-size: 12px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${opt.text}</div>
+                        // Вмикаємо таймер
+                        const timerMusic = document.getElementById("timerMusic");
+                        timerMusic.currentTime = 0;
+                        timerMusic.play().catch(e => console.log("Audio blocked"));
+
+                        questionText.innerHTML = `
+                            <div style="margin-bottom: 20px;">${data.question}</div>
+                            ${data.image_url ? `
+                                <div style="margin-bottom: 20px; animation: fadeInUp 0.5s ease-out;">
+                                    <img src="${data.image_url}" style="max-width: 100%; max-height: 250px; border-radius: 15px; border: 3px solid rgba(255,255,255,0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+                                </div>
+                            ` : ''}
+                        `;
+                        answersBox.innerHTML = "";
+                        answersBox.className = "answers-section";
+
+                        if (qType === 'text_input') {
+                            answersBox.style.display = "block";
+                            answersBox.innerHTML = `
+                        <div style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 500px; margin: 0 auto; animation: fadeInUp 0.5s ease-out;">
+                            <input type="text" id="textAnswer" placeholder="Введіть відповідь..." 
+                                   style="padding: 20px; border-radius: 15px; border: 2px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.2); color: white; font-size: 1.5rem; text-align: center; width: 100%; box-sizing: border-box; outline: none;">
+                            <button class="answer-btn" style="background: #4CAF50; width: 100%;" onclick="sendTextAnswer()">Надіслати</button>
                         </div>
-                    `).join('')}
-                </div>
-            `;
-            answersBox.style.display = "block";
-            document.querySelector('.question-section').style.display = "none";
-        }
+                    `;
+                        }
+                        else if (qType === 'puzzle') {
+                            let selectedOrder = [];
+                            const submitBtn = document.createElement("button");
+                            submitBtn.className = "answer-btn";
+                            submitBtn.innerText = "Надіслати";
+                            submitBtn.style.display = "none";
+                            submitBtn.style.gridColumn = "1 / -1";
+                            submitBtn.style.background = "#4CAF50";
+                            submitBtn.onclick = () => {
+                                document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
+                                sendPuzzleAnswer(selectedOrder);
+                            };
 
-        if (data.type === "show_leaderboard") {
-            answersBox.innerHTML = `
-                <h2 style="text-align: center; margin-bottom: 20px;">Проміжні результати</h2>
+                            data.options.forEach((option) => {
+                                const btn = document.createElement("button");
+                                btn.className = "answer-btn";
+                                btn.style.position = "relative";
+                                btn.style.overflow = "visible";
+                                btn.dataset.id = option.id;
+                                btn.innerHTML = `
+                            <div class="puzzle-square"></div>
+                            <span class="btn-text">${option.text}</span>
+                        `;
+
+                                btn.onclick = function (e) {
+                                    const idx = selectedOrder.indexOf(option.id);
+                                    if (idx !== -1) {
+                                        selectedOrder.splice(idx, 1);
+                                        this.classList.remove("selected");
+                                        this.querySelector(".puzzle-square").innerText = "";
+                                        document.querySelectorAll('.answer-btn.selected').forEach(b => {
+                                            const bIdx = selectedOrder.indexOf(Number(b.dataset.id));
+                                            if (bIdx !== -1) b.querySelector(".puzzle-square").innerText = bIdx + 1;
+                                        });
+                                    } else {
+                                        selectedOrder.push(option.id);
+                                        this.classList.add("selected");
+                                        this.querySelector(".puzzle-square").innerText = selectedOrder.length;
+                                    }
+                                    submitBtn.style.display = (selectedOrder.length === data.options.length) ? "block" : "none";
+                                };
+                                answersBox.appendChild(btn);
+                            });
+                            answersBox.appendChild(submitBtn);
+                            answersBox.style.display = "grid";
+                        }
+                        else {
+                            data.options.forEach((option) => {
+                                const btn = document.createElement("button");
+                                btn.className = "answer-btn";
+                                btn.innerText = option.text;
+                                btn.onclick = () => {
+                                    document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
+                                    sendAnswer(option.id);
+                                };
+                                answersBox.appendChild(btn);
+                            });
+                            answersBox.style.display = "grid";
+                        }
+
+                        document.querySelector('.question-section').style.display = "block";
+                        if (data.time_limit) startTimer(data.time_limit);
+                        if (data.already_answered) showWaiting();
+                    }, 3000); // 3 секунди
+                    return;
+                }
+
+                if (data.type === "redirect") {
+                    if (!redirected) {  // 👈 ПРОВЕРЯЕМ ФЛАГ
+                        redirected = true;
+                        window.location.href = data.url;
+                        return;  // 👈 ВЫХОДИМ
+                    }
+                }
+
+                if (data.type === "waiting") {
+                    document.getElementById("answersBox").style.display = "none";
+                    document.getElementById("waitingBox").style.display = "block";
+                }
+
+                if (data.type === "lobby_disbanded") {
+                    alert(data.message);
+                    window.location.href = "/";
+                }
+
+                if (data.type === "show_answer_chart") {
+                    if (timerInterval) clearInterval(timerInterval);
+                    document.getElementById("timerMusic").pause();
+                    waitingBox.style.display = "none";
+                    
+                    const qType = (data.question_type || "").toLowerCase();
+                    const maxVotes = Math.max(...data.chart_data.map(d => d.votes), 1);
+                    let chartHtml = "";
+
+                    if (qType === 'puzzle') {
+                        chartHtml = `
+                            <h2 style="color: #ffd700; font-size: 22px; font-weight: 900; margin-bottom: 25px;">Правильна послідовність</h2>
+                            <div style="background: #4CAF50; padding: 20px; border-radius: 15px; margin-bottom: 30px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                                ${data.correct_option}
+                            </div>
+                            <div style="display: flex; justify-content: center; align-items: flex-end; height: 150px; gap: 15px; margin-top: 20px; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 15px;">
+                                ${data.chart_data.map(opt => {
+                                    const isPlayerCol = (data.player_accuracy !== undefined && opt.id === data.player_accuracy);
+                                    const barColor = isPlayerCol ? 'linear-gradient(to top, #4CAF50, #81C784)' : 'linear-gradient(to top, #7E57C2, #9575CD)';
+                                    const shadowColor = isPlayerCol ? 'rgba(76,175,80,0.3)' : 'rgba(126,87,194,0.3)';
+                                    return `
+                                    <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
+                                        <div style="font-size: 18px; margin-bottom: 8px; font-weight: 900; color: ${isPlayerCol ? '#4CAF50' : 'white'}">${opt.votes}</div>
+                                        <div style="width: 40px; height: ${Math.max((opt.votes / maxVotes) * 120, 8)}px; background: ${barColor}; border-radius: 8px 8px 0 0; box-shadow: 0 0 15px ${shadowColor}; transition: height 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+                                        <div style="margin-top: 10px; font-size: 12px; font-weight: bold; text-align: center; color: white;">${opt.text}</div>
+                                    </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `;
+                    } else {
+                        chartHtml = `
+                            <h3 style="color: #4CAF50; font-size: 18px; margin-bottom: 30px; font-weight: 800;">ПРАВИЛЬНО: ${data.correct_option}</h3>
+                            <div style="display: flex; justify-content: center; align-items: flex-end; height: 200px; gap: 20px; margin-top: 20px; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 15px;">
+                                ${data.chart_data.map(opt => `
+                                    <div style="display: flex; flex-direction: column; align-items: center; width: 70px;">
+                                        <div style="font-size: 20px; margin-bottom: 8px; font-weight: 900; color: ${opt.is_correct ? '#4CAF50' : 'white'}">${opt.votes}</div>
+                                        <div style="width: 45px; height: ${Math.max((opt.votes / maxVotes) * 150, 8)}px; background: ${opt.is_correct ? 'linear-gradient(to top, #4CAF50, #81C784)' : 'linear-gradient(to top, #ff4b2b, #ff416c)'}; border-radius: 8px 8px 0 0; box-shadow: 0 0 15px ${opt.is_correct ? 'rgba(76,175,80,0.3)' : 'rgba(255,75,43,0.3)'}; transition: height 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+                                        <div style="margin-top: 12px; font-size: 11px; font-weight: bold; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; opacity: 0.8; color: white;">${opt.text}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+
+                    answersBox.innerHTML = `<div class="chart-container zoom-in">${chartHtml}</div>`;
+                    answersBox.style.display = "block";
+                    document.querySelector('.question-section').style.display = "none";
+                }
+
+                if (data.type === "host_skipped_question") {
+                    if (timerInterval) clearInterval(timerInterval);
+                    document.getElementById("timerMusic").pause();
+                    
+                    // ГАРАНТОВАНО ХОВАЄМО ВІКНО ОЧІКУВАННЯ
+                    waitingBox.style.display = "none";
+                    document.querySelector('.question-section').style.display = "none";
+                    
+                    answersBox.innerHTML = `
+                        <div style="text-align: center; animation: zoomIn 0.5s ease; padding: 40px 20px; background: rgba(0,0,0,0.5); border-radius: 30px; border: 2px solid #ff4500;">
+                            <h2 style="color: #ff4500; font-size: 32px; font-weight: 900; margin-bottom: 20px;">⚠️ ПИТАННЯ ПРОПУЩЕНО</h2>
+                            <p style="font-size: 20px; color: white; opacity: 0.9;">Хост вирішив пропустити це питання та перейти далі.</p>
+                            <div style="font-size: 80px; margin-top: 30px; filter: drop-shadow(0 0 20px #ff4500);">⏭️</div>
+                        </div>
+                    `;
+                    answersBox.style.display = "block";
+                }
+
+                if (data.type === "show_leaderboard") {
+                    // Update my own stats from the leaderboard if I'm in the top 5, or just wait
+                    const me = data.leaderboard.find(p => p.name === playerName);
+                    if (me) {
+                        document.getElementById("currentScore").innerText = me.score;
+                        document.getElementById("currentStreak").innerText = me.streak;
+                        document.getElementById("streakIndicator").style.display = me.streak >= 3 ? "flex" : "none";
+                    }
+
+                    answersBox.innerHTML = `
+                <h2 style="text-align: center; margin-bottom: 20px; color: #8a2be2; font-weight: 900;">Проміжні результати</h2>
                 <ul style="list-style: none; padding: 0; max-width: 400px; margin: 0 auto;">
                     ${data.leaderboard.map((p, i) => `
-                        <li style="background: ${p.name === playerName ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255,255,255,0.1)'}; padding: 15px; margin: 10px 0; border-radius: 10px; display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; border: ${p.name === playerName ? '2px solid #4CAF50' : 'none'};">
-                            <span>${i+1}. ${p.name} ${p.name === playerName ? '(Ви)' : ''}</span>
-                            <span>${p.correct} очків</span>
+                        <li style="background: ${p.name === playerName ? 'rgba(138, 43, 226, 0.2)' : 'rgba(255,255,255,0.05)'}; padding: 15px; margin: 10px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: bold; border: ${p.name === playerName ? '2px solid #8a2be2' : '1px solid rgba(255,255,255,0.1)'}; color: #8a2be2;">
+                            <div style="display: flex; align-items: center;">
+                                <span style="color: #8a2be2;">${i + 1}. ${p.name} ${p.name === playerName ? '(Ви)' : ''}</span>
+                                ${p.streak >= 3 ? `<span style="margin-left: 10px;">🔥</span>` : ''}
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: #8a2be2; font-size: 22px;">${p.score}</div>
+                                <div style="font-size: 11px; opacity: 0.8; color: #8a2be2;">Серія: ${p.streak}</div>
+                            </div>
                         </li>
                     `).join('')}
                 </ul>
             `;
-        }
+                }
 
-        if (data.type === "show_final_results") {
-            showResults(data.results);
-        }
+                if (data.type === "show_final_results") {
+                    showResults(data.results);
+                }
 
-        if (data.type === "answers_count") {
-            const answered = data.answered;
-            const total = data.total;
-            
-            // Оновлюємо текст
-            document.getElementById("answeredCount").innerText = answered;
-            document.getElementById("totalCount").innerText = total;
-            
-            // Оновлюємо прогресс-бар
-            const percentage = total > 0 ? (answered / total) * 100 : 0;
-            document.getElementById("progressBar").style.width = percentage + "%";
-        }
+                if (data.type === "answers_count") {
+                    const answered = data.answered;
+                    const total = data.total;
 
-        if (data.type === "time_up") {
-            // Time is up, show message but allow answering
-            if (timerInterval) clearInterval(timerInterval);
-            timerDisplay.innerText = "Время вышло!";
-        }
-    };
+                    // Оновлюємо текст
+                    document.getElementById("answeredCount").innerText = answered;
+                    document.getElementById("totalCount").innerText = total;
 
-    function sendAnswer(option_id) {
-        if (socket.readyState !== WebSocket.OPEN) return;
+                    // Оновлюємо прогресс-бар
+                    const percentage = total > 0 ? (answered / total) * 100 : 0;
+                    document.getElementById("progressBar").style.width = percentage + "%";
+                }
 
-        socket.send(JSON.stringify({
-            type: "answer",
-            option_id: option_id
-        }));
+                if (data.type === "time_up") {
+                    // Time is up, show message but allow answering
+                    if (timerInterval) clearInterval(timerInterval);
+                    timerDisplay.innerText = "Время вышло!";
+                }
+            };
 
-        // ховаємо кнопки
-        document.getElementById("answersBox").style.display = "none";
+            function sendAnswer(option_id) {
+                if (socket.readyState !== WebSocket.OPEN) return;
 
-        // показуємо очікування
-        document.getElementById("waitingBox").style.display = "block";
-    }
+                socket.send(JSON.stringify({
+                    type: "answer",
+                    option_id: option_id
+                }));
 
-    function showWaiting() {
-        document.getElementById("answersBox").style.display = "none";
-        document.getElementById("waitingBox").style.display = "block";
-    }
-
-    function startTimer(timeLimit) {
-        if (timerInterval) clearInterval(timerInterval);
-        let timeLeft = timeLimit;
-        timerDisplay.innerText = timeLeft;
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            timerDisplay.innerText = timeLeft;
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                timerDisplay.innerText = "Время вышло!";
-                // Allow answering even after time up
+                showWaiting();
             }
-        }, 1000);
-    }
 
-    function showResults(results) {
-        if (timerInterval) clearInterval(timerInterval);
-        waitingBox.style.display = "none";
-        resultsBox.style.display = "flex";
-        resultsTable.innerHTML = "";
+            window.sendTextAnswer = function () {
+                const text = document.getElementById("textAnswer").value;
+                if (!text) return;
+                socket.send(JSON.stringify({
+                    type: "answer",
+                    answer_text: text
+                }));
+                showWaiting();
+            };
 
-        results.forEach(r => {
-            const tr = document.createElement("tr");
-            let nameCell = r.name;
-            if (r.name === playerName) {
-                nameCell = "(Вы) " + r.name;
+            window.sendPuzzleAnswer = function (ids) {
+                socket.send(JSON.stringify({
+                    type: "answer",
+                    option_ids: ids
+                }));
+                showWaiting();
+            };
+
+            function showWaiting(msg) {
+                if (msg) {
+                    document.getElementById("waitingMessage").innerText = msg;
+                } else {
+                    document.getElementById("waitingMessage").innerText = "Відповідь прийнята!";
+                }
+                document.getElementById("answersBox").style.display = "none";
+                document.getElementById("waitingBox").style.display = "block";
             }
-            tr.innerHTML = `<td>${nameCell}</td><td>${r.correct}/${r.total}</td>`;
-            resultsTable.appendChild(tr);
+
+            function startTimer(timeLimit) {
+                if (timerInterval) clearInterval(timerInterval);
+                let timeLeft = timeLimit;
+                timerDisplay.innerText = timeLeft;
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    timerDisplay.innerText = timeLeft;
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        timerDisplay.innerText = "Время вышло!";
+                        // Allow answering even after time up
+                    }
+                }, 1000);
+            }
+
+            function showResults(results) {
+                if (timerInterval) clearInterval(timerInterval);
+                document.getElementById("timerMusic").pause();
+                document.getElementById("winMusic").play().catch(e => {});
+
+                // Ховаємо ігрові елементи
+                document.querySelector('.question-section').style.display = "none";
+                document.getElementById("answersBox").style.display = "none";
+                document.getElementById("waitingBox").style.display = "none";
+
+                const resultsBox = document.getElementById("resultsBox");
+                resultsBox.style.display = "flex";
+
+                const myRank = results.findIndex(p => p.name === playerName) + 1;
+                const myData = results.find(p => p.name === playerName);
+
+                const resultsContent = document.querySelector('.results-content');
+                resultsContent.innerHTML = `
+                    <div style="animation: fadeInUp 0.8s ease-out;">
+                        <h1 style="color: #ffd700; font-size: 3rem; font-weight: 900; margin-bottom: 20px; text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);">🏁 ГРУ ЗАВЕРШЕНО!</h1>
+                        
+                        <div style="background: rgba(138, 43, 226, 0.15); padding: 30px; border-radius: 30px; border: 2px solid #8a2be2; margin-bottom: 35px; animation: bounceIn 1s ease;">
+                            <div style="font-size: 1.2rem; opacity: 0.8; margin-bottom: 10px;">Твоє місце:</div>
+                            <div style="font-size: 5rem; font-weight: 900; color: #ff69b4; line-height: 1;">#${myRank || '?'}</div>
+                            <div style="font-size: 1.5rem; margin-top: 15px; font-weight: bold;">${myData ? myData.score : 0} очок</div>
+                        </div>
+
+                        <h3 style="color: #ff69b4; margin-bottom: 20px; text-align: left; font-weight: 800; letter-spacing: 1px;">ТОП-5 ГРАВЦІВ:</h3>
+                        <div id="resultsList" style="width: 100%;">
+                            ${results.map((p, i) => `
+                                <div style="animation: fadeInUp ${1 + i * 0.2}s ease-out; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; margin-bottom: 10px; background: ${p.name === playerName ? 'rgba(255, 105, 180, 0.1)' : 'rgba(255,255,255,0.05)'}; border-radius: 15px; border: 1px solid ${p.name === playerName ? '#ff69b4' : 'rgba(255,255,255,0.1)'};">
+                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                        <div style="font-weight: 900; font-size: 24px; color: ${i < 3 ? '#ffd700' : '#8a2be2'}; min-width: 30px;">${i + 1}</div>
+                                        <img src="https://api.dicebear.com/9.x/avataaars/svg?${p.avatar}" style="width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+                                        <span style="font-weight: 700; color: white;">${p.name} ${p.name === playerName ? '<span style="color:#ff69b4">(Ти)</span>' : ''}</span>
+                                    </div>
+                                    <div style="text-align: right; font-size: 22px; font-weight: 900; color: #ffd700;">${p.score}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <a href="/" class="answer-btn" style="text-decoration: none; display: block; margin-top: 40px; padding: 20px; font-size: 1.5rem; background: linear-gradient(45deg, #8a2be2, #ff69b4); border-radius: 20px; color: white; font-weight: 900; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">НА ГОЛОВНУ</a>
+                    </div>
+                `;
+            }
         });
-    }
-});
-</script>
+    </script>
 </body>
+
 </html>

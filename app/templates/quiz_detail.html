@@ -6,12 +6,17 @@
     <title>{% block title %}Kahoot-remake{% endblock %}</title>
     <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             min-height: 100vh;
-            background-image: url("{% static 'Home_bg.png' %}");
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("{% static 'Home_bg.png' %}");
             background-size: cover;
             background-position: center;
+            background-attachment: fixed;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
             padding: 20px;
@@ -263,6 +268,17 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
         }
 
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+        }
+
         .back-button {
             position: fixed;
             top: 20px;
@@ -354,6 +370,7 @@
                             <div class="question-meta">
                                 <span class="question-number">Питання {{ forloop.counter }}</span>
                                 <span class="time-limit">{{ question.time_limit }} сек</span>
+                                <a href="{% url 'edit_question' quiz.id question.id %}" class="btn btn-secondary" style="padding: 5px 15px; font-size: 0.8rem; border-radius: 10px;">📝 Редагувати</a>
                             </div>
                         </li>
                     {% endfor %}

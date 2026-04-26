@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="uk">
+
 <head>
     <meta charset="UTF-8">
     <title>Лоббі хоста - Kahoot-remake</title>
@@ -8,43 +9,55 @@
     <style>
         body {
             margin: 0;
-            height: 100vh;
-            background-image: url("{% static 'Home_bg.png' %}");
+            min-height: 100vh;
+            background-image: linear-gradient(rgba(0, 5, 25, 0.4), rgba(0, 5, 25, 0.4)), url("{% static 'Home_bg.png' %}");
             background-size: cover;
             background-position: center;
+            background-attachment: fixed;
             font-family: 'Nunito', Arial, sans-serif;
             color: white;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .lobby-container {
-            background-color: rgba(0, 0, 0, 0.514);
-            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 30px;
             padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.8),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.05);
             text-align: center;
-            max-width: 600px;
-            width: 90%;
+            max-width: 1100px;
+            width: 95%;
             position: relative;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 1;
         }
 
         .lobby-container::before {
-            content: '';
+            content: "";
             position: absolute;
-            top: -5px;
-            left: -5px;
-            right: -5px;
-            bottom: -5px;
-            background: linear-gradient(45deg, #8a2be2, #764ba2, #ffffff71, #764ba2, #8a2be2);
-            border-radius: 25px;
+            inset: -4px;
+            border-radius: 34px;
+            padding: 4px;
+            background: linear-gradient(45deg, #8a2be2, #ff69b4, #ffffff71, #ff69b4, #8a2be2);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            background-size: 200% 200%;
+            animation: borderRotate 4s linear infinite;
             z-index: -1;
-            animation: gradientShift 3s ease infinite;
         }
 
-        @keyframes gradientShift {
+        @keyframes borderRotate {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
@@ -82,13 +95,18 @@
         #players {
             list-style: none;
             padding: 0;
-            max-height: 200px;
+            max-height: 250px;
             overflow-y: auto;
+            overflow-x: hidden; /* Запобігаємо горизонтальному скролу завжди */
         }
 
         #players.waiting {
             max-height: none;
-            overflow-y: visible;
+            overflow: hidden; /* Повністю ховаємо скрол під час очікування */
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #players li {
@@ -97,6 +115,8 @@
             padding: 10px 15px;
             border-radius: 10px;
             font-size: 18px;
+            color: #8a2be2;
+            font-weight: bold;
             transition: background-color 0.3s;
         }
 
@@ -147,13 +167,120 @@
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Transition Overlay */
+        #typeTransition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(138, 43, 226, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .type-label {
+            font-size: 60px;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 10px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+
+            70% {
+                transform: scale(0.9);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .streak-badge {
+            background: linear-gradient(45deg, #ff4500, #ff8c00);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-left: 10px;
+            animation: flicker 0.5s infinite alternate;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        @keyframes flicker {
+            from {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+
+            to {
+                transform: scale(1.1);
+                filter: brightness(1.3);
+            }
+        }
+
+        .zoom-in {
+            animation: zoomIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
     </style>
 </head>
+
 <body>
+    <div id="typeTransition">
+        <div class="type-label" id="typeLabel">ВИБІР ВАРІАНТА</div>
+    </div>
+
+    <!-- Аудіосупровід -->
+    <audio id="lobbyMusic" loop>
+        <source src="https://archive.org/download/kahoot-lobby-music/Kahoot%20Lobby%20Music.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="timerMusic">
+        <source src="https://www.myinstants.com/media/sounds/kahoot-music.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="winMusic">
+        <source src="https://www.myinstants.com/media/sounds/kahoot-win.mp3" type="audio/mpeg">
+    </audio>
     <div class="lobby-container">
         <h1>Лоббі хоста</h1>
         <div class="game-code">{{ session.code }}</div>
@@ -161,239 +288,427 @@
         <div class="players-section">
             <!-- 👉 Стилізований лічильник для хоста -->
             <div style="margin-bottom: 20px;">
-                <div style="font-size: 18px; background: rgba(255, 255, 255, 0.1); display: inline-block; padding: 8px 25px; border-radius: 50px; border: 1px solid rgba(138, 43, 226, 0.3); color: #ff69b4; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <div
+                    style="font-size: 18px; background: rgba(255, 255, 255, 0.1); display: inline-block; padding: 8px 25px; border-radius: 50px; border: 1px solid rgba(138, 43, 226, 0.3); color: #ff69b4; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                     Учасників: <span id="hostPlayerCount" style="color: white; font-size: 22px;">0</span>
                 </div>
             </div>
-            <div class="players-title" id="playersTitle">Список гравців:</div>
-            <ul id="players">
+
+            <ul id="players" class="{% if not session.players.all %}waiting{% endif %}">
                 {% for player in session.players.all %}
-                    <li>{{ player.name }}</li>
+                <li style="display: flex; align-items: center; gap: 15px;">
+                    <img src="https://api.dicebear.com/9.x/avataaars/svg?{{ player.avatar }}" style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1);">
+                    <span>{{ player.name }}</span>
+                </li>
                 {% empty %}
-                    <li class="pulse">Очікуємо гравців...</li>
+                <li class="pulse">Очікуємо гравців...</li>
                 {% endfor %}
             </ul>
         </div>
 
         {% if request.user == session.host %}
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;" id="lobbyControls">
             <button type="button" class="start-btn" onclick="onStartClick()" id="startBtn">Почати гру</button>
+            <button type="button" class="start-btn" onclick="disbandLobby()" id="disbandBtn"
+                style="background: linear-gradient(45deg, #ff4b2b, #ff416c); font-size: 18px;">Розпустити лоббі</button>
+        </div>
         {% endif %}
 
         <div id="question"></div>
     </div>
 
-<script>
-window.addEventListener("load", () => {
-    const code = "{{ session.code }}";  // Переконайся, що це не порожнє
-    const playerName = "{{ request.user.username|default:'Host' }}";
-    const isHost = {% if request.user == session.host %}true{% else %}false{% endif %};
-    const startBtn = document.getElementById("startBtn"); // твоя кнопка
-    const nameInput = document.getElementById("nameInput"); // поле для імені
-    const playersList = document.getElementById("players"); // ul для гравців
-    const questionBox = document.getElementById("question"); // div або p для питання
+    <script>
+        window.addEventListener("load", () => {
+            const code = "{{ session.code }}";  // Переконайся, що це не порожнє
+            const playerName = "{{ request.user.username|default:'Host' }}";
+            const isHost = ("{{ request.user.pk }}" === "{{ session.host.pk }}");
+            const startBtn = document.getElementById("startBtn"); // твоя кнопка
+            const nameInput = document.getElementById("nameInput"); // поле для імені
+            const playersList = document.getElementById("players"); // ul для гравців
+            const questionBox = document.getElementById("question"); // div або p для питання
 
-    let playersInLobby = [];
+            let playersInLobby = [];
 
-    // Створюємо WebSocket
-    const socket = new WebSocket(
-        "ws://" + window.location.host + "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName) + "&role=host"
-    );
+            // Створюємо WebSocket
+            const socket = new WebSocket(
+                "ws://" + window.location.host + "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName) + "&role=host"
+            );
 
 
-    // Коли підключення відкрите
-    socket.onopen = () => {
-        console.log("WebSocket connected");
-        if(startBtn) startBtn.disabled = false; // Кнопка активна тільки після підключення
-    };
+            // Коли підключення відкрите
+            socket.onopen = () => {
+                console.log("WebSocket connected");
+                if (startBtn) startBtn.disabled = false; // Кнопка активна тільки після підключення
+            };
 
-    // Обробка повідомлень від сервера
-    socket.onmessage = function (event) {
-    console.log("RAW MESSAGE:", event.data);
+            // Обробка повідомлень від сервера
+            socket.onmessage = function (event) {
+                console.log("RAW MESSAGE:", event.data);
 
-    const data = JSON.parse(event.data);
-    console.log("PARSED:", data);
+                const data = JSON.parse(event.data);
+                console.log("PARSED:", data);
 
-    if (data.type === "players") {
-        playersInLobby = data.players; // ← ОЦЕ ГОЛОВНЕ
-        console.log("Players in lobby:", playersInLobby.length);
-        
-        // Оновлюємо лічильник
-        const hostCountSpan = document.getElementById("hostPlayerCount");
-        if (hostCountSpan) {
-            hostCountSpan.innerText = data.players.length;
-        }
-    }
+                if (data.type === "players") {
+                    playersInLobby = data.players; // ← ОЦЕ ГОЛОВНЕ
+                    console.log("Players in lobby:", playersInLobby.length);
 
-        if(data.type === "players" && playersList) {
-            playersList.innerHTML = "";
-            const playersTitle = document.getElementById("playersTitle");
-            if (data.players.length === 0) {
-                playersList.classList.add("waiting");
-                const li = document.createElement("li");
-                li.textContent = "Очікуємо гравців...";
-                li.className = "pulse";
-                playersList.appendChild(li);
-                if (playersTitle) playersTitle.style.display = "none";
-            } else {
-                playersList.classList.remove("waiting");
-                data.players.forEach(name => {
-                    const li = document.createElement("li");
-                    li.textContent = name;
-                    if (isHost) {
-                        const btn = document.createElement("button");
-                        btn.textContent = "X";
-                        btn.style.background = "red";
-                        btn.style.color = "white";
-                        btn.style.border = "none";
-                        btn.style.padding = "2px 5px";
-                        btn.style.cursor = "pointer";
-                        btn.style.float = "right";
-                        btn.onclick = () => kickPlayer(name);
-                        li.appendChild(btn);
+                    // Оновлюємо лічильник
+                    const hostCountSpan = document.getElementById("hostPlayerCount");
+                    if (hostCountSpan) {
+                        hostCountSpan.innerText = data.players.length;
                     }
-                    playersList.appendChild(li);
-                });
-                if (playersTitle) playersTitle.style.display = "block";
-            }
-        }
+                }
+
+                if (data.type === "lobby_disbanded") {
+                    window.location.href = "/quiz/list/";
+                }
+
+                if (data.type === "players" && playersList) {
+                    playersList.innerHTML = "";
+                    const playersTitle = document.getElementById("playersTitle");
+                    
+                    // Відтворюємо музику лоббі при першому підключенні гравця (якщо ще не грає)
+                    const lobbyMusic = document.getElementById("lobbyMusic");
+                    if (data.players.length > 0 && lobbyMusic.paused) {
+                        lobbyMusic.play().catch(e => console.log("Audio blocked by browser"));
+                    }
+
+                    if (data.players.length === 0) {
+                        playersList.classList.add("waiting");
+                        const li = document.createElement("li");
+                        li.textContent = "Очікуємо гравців...";
+                        li.className = "pulse";
+                        playersList.appendChild(li);
+                        if (playersTitle) playersTitle.style.display = "none";
+                    } else {
+                        playersList.classList.remove("waiting");
+                        data.players.forEach(p => {
+                            const li = document.createElement("li");
+                            li.style.display = "flex";
+                            li.style.alignItems = "center";
+                            li.style.justifyContent = "space-between";
+                            
+                            const playerInfo = document.createElement("div");
+                            playerInfo.style.display = "flex";
+                            playerInfo.style.alignItems = "center";
+                            playerInfo.style.gap = "10px";
+                            
+                            const img = document.createElement("img");
+                            img.src = `https://api.dicebear.com/9.x/avataaars/svg?${p.avatar}`;
+                            img.style.width = "40px";
+                            img.style.height = "40px";
+                            img.style.borderRadius = "50%";
+                            img.style.background = "rgba(255,255,255,0.1)";
+                            
+                            const nameSpan = document.createElement("span");
+                            nameSpan.textContent = p.name;
+                            
+                            playerInfo.appendChild(img);
+                            playerInfo.appendChild(nameSpan);
+                            li.appendChild(playerInfo);
+
+                            if (isHost) {
+                                const btn = document.createElement("button");
+                                btn.textContent = "X";
+                                btn.style.background = "rgba(255, 0, 0, 0.3)";
+                                btn.style.color = "white";
+                                btn.style.border = "none";
+                                btn.style.padding = "5px 10px";
+                                btn.style.borderRadius = "5px";
+                                btn.style.cursor = "pointer";
+                                btn.onclick = () => kickPlayer(p.name);
+                                li.appendChild(btn);
+                            }
+                            playersList.appendChild(li);
+                        });
+                        if (playersTitle) playersTitle.style.display = "block";
+                    }
+                }
 
 
-        if(data.type === "game_started") {
-            console.log("GAME STARTED");
-        }
+                if (data.type === "game_started") {
+                    console.log("GAME STARTED");
+                }
 
-        if (data.type === "question") {
-            // Hide lobby
-            document.querySelector(".players-section").style.display = "none";
-            document.querySelector(".game-code").style.display = "none";
-            if (startBtn) startBtn.style.display = "none";
+                if (data.type === "question") {
+                    // Show transition animation
+                    const typeOverlay = document.getElementById("typeTransition");
+                    const typeLabel = document.getElementById("typeLabel");
+                    const typeMap = {
+                        'multiple_choice': 'Вибір варіанта',
+                        'true_false': 'Правда/Брехня',
+                        'puzzle': 'Пазл (Порядок)',
+                        'text_input': 'Ввід тексту'
+                    };
 
-            currentPhase = "question";
-            questionBox.innerHTML = `
-                <h2>${data.question}</h2>
-                <div style="font-size: 30px; margin: 20px 0;" id="timerDisplay">${data.time_limit}</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;" id="optionsGrid">
-                    ${data.options.map(opt => `<div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px;">${opt.text}</div>`).join('')}
-                </div>
-                <div style="margin-top: 30px;">
-                    <button class="start-btn" style="background: #ff69b4; font-size: 18px; padding: 10px 20px;" onclick="skipQuestion()">Пропустити питання</button>
-                </div>
-            `;
-            startHostTimer(data.time_limit);
-        }
+                    typeLabel.textContent = typeMap[data.question_type] || 'Наступне питання';
+                    typeOverlay.style.display = "flex";
+                    typeLabel.classList.add("zoom-in");
 
-        if (data.type === "show_answer_chart") {
-            if (hostTimerInterval) clearInterval(hostTimerInterval);
-            currentPhase = "chart";
-            const maxVotes = Math.max(...data.chart_data.map(d => d.votes), 1);
-            
-            questionBox.innerHTML = `
-                <h2 style="color: #4CAF50;">Правильний варіант: ${data.correct_option}</h2>
-                <div style="display: flex; justify-content: center; align-items: flex-end; height: 200px; gap: 20px; margin-top: 40px; border-bottom: 2px solid white; padding-bottom: 10px;">
-                    ${data.chart_data.map(opt => `
-                        <div style="display: flex; flex-direction: column; align-items: center; width: 100px;">
-                            <div style="font-size: 24px; margin-bottom: 5px;">${opt.votes}</div>
-                            <div style="width: 60px; height: ${Math.max((opt.votes / maxVotes) * 150, 5)}px; background: ${opt.is_correct ? '#4CAF50' : '#ff69b4'}; border-radius: 5px 5px 0 0; transition: height 0.5s;"></div>
-                            <div style="margin-top: 10px; font-size: 14px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${opt.text}</div>
+                    setTimeout(() => {
+                        typeOverlay.style.display = "none";
+                        typeLabel.classList.remove("zoom-in");
+
+                        // Зупиняємо музику лоббі, вмикаємо таймер
+                        document.getElementById("lobbyMusic").pause();
+                        const timerMusic = document.getElementById("timerMusic");
+                        timerMusic.currentTime = 0;
+                        timerMusic.play().catch(e => console.log("Timer audio blocked"));
+
+                        // Show question after animation
+                        document.querySelector(".players-section").style.display = "none";
+                        document.querySelector(".game-code").style.display = "none";
+                        if (startBtn) startBtn.style.display = "none";
+
+                        currentPhase = "question";
+                        const qType = (data.question_type || "").toLowerCase();
+                        let optionsHtml = '';
+                        let gridStyle = 'display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;';
+                        
+                        if (qType === 'text_input') {
+                            gridStyle = 'display: flex; justify-content: center; margin-top: 30px;';
+                            optionsHtml = `<div style="background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; border: 2px dashed rgba(255,255,255,0.3); font-size: 24px; color: rgba(255,255,255,0.6); width: 100%; max-width: 600px;">⌨️ Гравці вписують відповідь...</div>`;
+                        } else if (qType === 'puzzle') {
+                            gridStyle = 'display: flex; justify-content: center; margin-top: 30px;';
+                            optionsHtml = `<div style="background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; border: 2px dashed rgba(255,255,255,0.3); font-size: 24px; color: rgba(255,255,255,0.6); width: 100%; max-width: 600px;">🧩 Гравці збирають послідовність...</div>`;
+                        } else {
+                            if (data.options.length === 1) gridStyle = 'display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 30px; max-width: 600px; margin-left: auto; margin-right: auto;';
+                            optionsHtml = data.options.map(opt => `<div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; font-size: 20px; font-weight: bold;">${opt.text}</div>`).join('');
+                        }
+
+                        questionBox.innerHTML = `
+                            <h2 style="font-size: 40px; margin-bottom: 20px;">${data.question}</h2>
+                            
+                            ${data.image_url ? `
+                                <div style="margin-bottom: 25px; animation: zoomIn 0.5s ease-out;">
+                                    <img src="${data.image_url}" style="max-width: 100%; max-height: 350px; border-radius: 20px; border: 4px solid rgba(255,255,255,0.1); box-shadow: 0 15px 35px rgba(0,0,0,0.4);">
+                                </div>
+                            ` : ''}
+
+                            <div style="font-size: 48px; font-weight: 900; margin: 20px 0; color: #ffd700;" id="timerDisplay">${data.time_limit}</div>
+                            <div style="${gridStyle}" id="optionsGrid">
+                                ${optionsHtml}
+                            </div>
+                            <div style="margin-top: 40px;">
+                                <button class="start-btn" style="background: #ff4500; font-size: 20px; padding: 15px 35px; border-radius: 50px;" onclick="skipQuestion()">Пропустити питання</button>
+                            </div>
+                        `;
+                        startHostTimer(data.time_limit);
+                    }, 2500); // 2.5s animation delay
+                }
+
+                if (data.type === "show_answer_chart") {
+                    if (hostTimerInterval) clearInterval(hostTimerInterval);
+                    currentPhase = "chart";
+                    const qType = (data.question_type || "").toLowerCase();
+
+                    if (qType === 'puzzle') {
+                        const parts = data.correct_option.split(" → ");
+                        questionBox.innerHTML = `
+                    <h2 style="color: #ffd700; margin-bottom: 40px;">Правильна послідовність</h2>
+                    <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 15px; margin: 40px 0;">
+                        ${parts.map((p, i) => `
+                            <div style="display: flex; align-items: center;">
+                                <div style="background: #4CAF50; padding: 20px 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); position: relative; min-width: 120px; text-align: center;">
+                                    <div style="position: absolute; top: -10px; left: -10px; width: 30px; height: 30px; background: white; color: #4CAF50; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 14px;">${i + 1}</div>
+                                    <span style="font-size: 20px; font-weight: bold;">${p}</span>
+                                </div>
+                                ${i < parts.length - 1 ? '<span style="font-size: 30px; margin: 0 10px;">➜</span>' : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="display: flex; justify-content: center; align-items: flex-end; height: 250px; gap: 25px; margin-top: 40px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 10px;">
+                        ${data.chart_data.map(opt => {
+                            const maxVotes = Math.max(...data.chart_data.map(d => d.votes), 1);
+                            const barColor = opt.is_correct ? 'linear-gradient(to top, #4CAF50, #81C784)' : 'linear-gradient(to top, #7E57C2, #9575CD)';
+                            return `
+                            <div style="display: flex; flex-direction: column; align-items: center; width: 100px;">
+                                <div style="font-size: 24px; margin-bottom: 10px; font-weight: bold;">${opt.votes}</div>
+                                <div style="width: 70px; height: ${Math.max((opt.votes / maxVotes) * 180, 10)}px; background: ${barColor}; border-radius: 8px 8px 0 0; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+                                <div style="margin-top: 15px; font-size: 14px; text-align: center; color: rgba(255,255,255,0.9); width: 100%; font-weight: 500;">${opt.text}</div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <button class="start-btn" style="margin-top: 40px;" onclick="nextPhase()">Далі</button>
+                `;
+                    } else {
+                        const maxVotes = Math.max(...data.chart_data.map(d => d.votes), 1);
+                        questionBox.innerHTML = `
+                    <h2 style="color: #4CAF50;">Правильна відповідь: ${data.correct_option}</h2>
+                    <div style="display: flex; justify-content: center; align-items: flex-end; height: 250px; gap: 25px; margin-top: 40px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 10px;">
+                        ${data.chart_data.map(opt => `
+                            <div style="display: flex; flex-direction: column; align-items: center; width: 100px;">
+                                <div style="font-size: 24px; margin-bottom: 10px; font-weight: bold;">${opt.votes}</div>
+                                <div style="width: 70px; height: ${Math.max((opt.votes / maxVotes) * 180, 10)}px; background: ${opt.is_correct ? 'linear-gradient(to top, #4CAF50, #81C784)' : 'linear-gradient(to top, #ff6b6b, #ee5a52)'}; border-radius: 8px 8px 0 0; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+                                <div style="margin-top: 15px; font-size: 14px; text-align: center; color: rgba(255,255,255,0.9); width: 100%; font-weight: 500;">${opt.text}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="start-btn" style="margin-top: 40px;" onclick="nextPhase()">Далі</button>
+                `;
+                    }
+                }
+
+                if (data.type === "host_skipped_question") {
+                    if (hostTimerInterval) clearInterval(hostTimerInterval);
+                    currentPhase = "chart"; // Перевикористовуємо фазу, щоб наступна кнопка вела до лідерборду
+                    questionBox.innerHTML = `
+                        <div style="animation: zoomIn 0.5s ease; text-align: center;">
+                            <h1 style="color: #ff4500; font-size: 60px; margin-bottom: 30px;">⚠️ ПИТАННЯ ПРОПУЩЕНО</h1>
+                            <p style="font-size: 30px; color: white;">Хост вирішив пропустити це питання</p>
+                            <div style="font-size: 100px; margin: 40px 0;">⏭️</div>
+                            <button class="start-btn" style="background: #ff4500;" onclick="nextPhase()">Далі до таблиці лідерів</button>
                         </div>
-                    `).join('')}
-                </div>
-                <button class="start-btn" style="margin-top: 40px;" onclick="nextPhase()">Далі</button>
-            `;
-        }
+                    `;
+                }
 
-        if (data.type === "show_leaderboard") {
-            currentPhase = "leaderboard";
-            const btnText = data.is_last_question ? "Показати результати" : "Наступне питання";
-            questionBox.innerHTML = `
-                <h2>Таблиця лідерів (Топ 5)</h2>
-                <ul style="list-style: none; padding: 0; max-width: 400px; margin: 30px auto;">
+                if (data.type === "show_leaderboard") {
+                    currentPhase = "leaderboard";
+                    // Зупиняємо таймер
+                    document.getElementById("timerMusic").pause();
+
+                    const btnText = data.is_last_question ? "Показати результати" : "Наступне питання";
+                    questionBox.innerHTML = `
+                <h2 style="color: #8a2be2; font-weight: 900;">Таблиця лідерів (Топ 5)</h2>
+                <ul style="list-style: none; padding: 0; max-width: 450px; margin: 30px auto;">
                     ${data.leaderboard.map((p, i) => `
-                        <li style="background: ${i === 0 ? 'linear-gradient(45deg, #ffd700, #ffa500)' : 'rgba(255,255,255,0.1)'}; padding: 15px; margin: 10px 0; border-radius: 10px; display: flex; justify-content: space-between; font-size: 20px; font-weight: bold;">
-                            <span>${i+1}. ${p.name}</span>
-                            <span>${p.correct}</span>
+                        <li style="background: ${i === 0 ? 'linear-gradient(45deg, rgba(138, 43, 226, 0.3), rgba(236, 72, 153, 0.3))' : 'rgba(255,255,255,0.05)'}; padding: 18px; margin: 12px 0; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 22px; font-weight: bold; border: 1px solid ${i === 0 ? '#8a2be2' : 'rgba(255,255,255,0.1)'}; color: #8a2be2;">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <img src="https://api.dicebear.com/9.x/avataaars/svg?${p.avatar}" style="width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);">
+                                <span style="color: #8a2be2;">${i + 1}. ${p.name}</span>
+                                ${p.streak >= 3 ? `<div class="streak-badge">🔥 ${p.streak}</div>` : ''}
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 26px; color: #8a2be2;">${p.score}</div>
+                                <div style="font-size: 13px; opacity: 0.8; color: #8a2be2;">Правильно: ${p.correct}</div>
+                            </div>
                         </li>
                     `).join('')}
                 </ul>
                 <button class="start-btn" style="margin-top: 20px;" onclick="nextPhase()">${btnText}</button>
             `;
-        }
+                }
 
-        if (data.type === "show_final_results") {
-            questionBox.innerHTML = `
-                <h1 style="color: #ffd700; font-size: 60px;">Гру завершено!</h1>
-                <h2>Фінальна таблиця лідерів</h2>
-                <ul style="list-style: none; padding: 0; max-width: 400px; margin: 30px auto;">
-                    ${data.results.map((p, i) => `
-                        <li style="background: ${i === 0 ? 'linear-gradient(45deg, #ffd700, #ffa500)' : 'rgba(255,255,255,0.1)'}; padding: 15px; margin: 10px 0; border-radius: 10px; display: flex; justify-content: space-between; font-size: 20px; font-weight: bold;">
-                            <span>${i+1}. ${p.name}</span>
-                            <span>${p.correct}</span>
-                        </li>
-                    `).join('')}
-                </ul>
-                <a href="/" style="display: inline-block; margin-top: 30px; background: #4CAF50; color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 20px;">Завершити</a>
-            `;
-        }
-    };
+                if (data.type === "show_final_results") {
+                    // Фанфари
+                    document.getElementById("timerMusic").pause();
+                    document.getElementById("winMusic").play().catch(e => console.log("Win audio blocked"));
 
-    let hostTimerInterval;
-    let currentPhase = "lobby";
+                    questionBox.innerHTML = `
+                        <div style="animation: fadeInUp 1s ease-out;">
+                            <h1 style="color: #ffd700; font-size: 70px; font-weight: 900; margin-bottom: 40px; text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);">🏆 ГРУ ЗАВЕРШЕНО!</h1>
+                            
+                            <!-- Podium Concept -->
+                            <div style="display: flex; justify-content: center; align-items: flex-end; gap: 20px; margin: 60px 0; height: 350px;">
+                                <!-- 2nd Place -->
+                                ${data.results[1] ? `
+                                <div style="display: flex; flex-direction: column; align-items: center; animation: fadeInUp 1.2s ease-out;">
+                                    <img src="https://api.dicebear.com/9.x/avataaars/svg?${data.results[1].avatar}" style="width: 80px; height: 80px; border-radius: 50%; border: 4px solid #c0c0c0; background: rgba(255,255,255,0.1); margin-bottom: 15px;">
+                                    <div style="background: linear-gradient(180deg, #c0c0c0, #7a7a7a); width: 140px; height: 180px; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                                        <div style="font-size: 50px; font-weight: 900; color: white;">2</div>
+                                        <div style="font-size: 18px; font-weight: bold; padding: 0 10px; color: white; word-break: break-all;">${data.results[1].name}</div>
+                                        <div style="font-size: 14px; opacity: 0.9; color: white;">${data.results[1].score}</div>
+                                    </div>
+                                </div>` : ''}
 
-    function startHostTimer(timeLimit) {
-        if (hostTimerInterval) clearInterval(hostTimerInterval);
-        let timeLeft = timeLimit;
-        const display = document.getElementById("timerDisplay");
-        hostTimerInterval = setInterval(() => {
-            timeLeft--;
-            if (display) display.innerText = timeLeft;
-            if (timeLeft <= 0) clearInterval(hostTimerInterval);
-        }, 1000);
-    }
+                                <!-- 1st Place -->
+                                ${data.results[0] ? `
+                                <div style="display: flex; flex-direction: column; align-items: center; animation: fadeInUp 0.8s ease-out;">
+                                    <div style="font-size: 40px; margin-bottom: 5px;">👑</div>
+                                    <img src="https://api.dicebear.com/9.x/avataaars/svg?${data.results[0].avatar}" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #ffd700; background: rgba(255,255,255,0.1); margin-bottom: 15px; box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);">
+                                    <div style="background: linear-gradient(180deg, #ffd700, #b8860b); width: 160px; height: 250px; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: relative; z-index: 10;">
+                                        <div style="font-size: 70px; font-weight: 900; color: white;">1</div>
+                                        <div style="font-size: 20px; font-weight: bold; padding: 0 10px; color: white; word-break: break-all;">${data.results[0].name}</div>
+                                        <div style="font-size: 16px; opacity: 0.9; color: white;">${data.results[0].score}</div>
+                                    </div>
+                                </div>` : ''}
 
-    window.nextPhase = function() {
-        socket.send(JSON.stringify({ type: "next_phase", current_phase: currentPhase }));
-    };
+                                <!-- 3rd Place -->
+                                ${data.results[2] ? `
+                                <div style="display: flex; flex-direction: column; align-items: center; animation: fadeInUp 1.5s ease-out;">
+                                    <img src="https://api.dicebear.com/9.x/avataaars/svg?${data.results[2].avatar}" style="width: 70px; height: 70px; border-radius: 50%; border: 4px solid #cd7f32; background: rgba(255,255,255,0.1); margin-bottom: 15px;">
+                                    <div style="background: linear-gradient(180deg, #cd7f32, #8b4513); width: 140px; height: 130px; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                                        <div style="font-size: 40px; font-weight: 900; color: white;">3</div>
+                                        <div style="font-size: 16px; font-weight: bold; padding: 0 10px; color: white; word-break: break-all;">${data.results[2].name}</div>
+                                        <div style="font-size: 12px; opacity: 0.9; color: white;">${data.results[2].score}</div>
+                                    </div>
+                                </div>` : ''}
+                            </div>
 
-    window.skipQuestion = function() {
-        socket.send(JSON.stringify({ type: "skip_question" }));
-    };
+                            <div style="margin-top: 50px;">
+                                <a href="/" class="start-btn" style="text-decoration: none; display: inline-block; background: linear-gradient(45deg, #4CAF50, #45a049); font-size: 24px; padding: 15px 50px;">НОВА ГРА</a>
+                            </div>
+                        </div>
+                    `;
+                }
+            };
 
-    socket.onclose = () => console.log("WebSocket CLOSED");
-    socket.onerror = (e) => console.error("WebSocket ERROR", e);
+            let hostTimerInterval;
+            let currentPhase = "lobby";
 
-    // Функція старту гри (глобальна)
-    window.startGame = function() {
-        if(!socket || socket.readyState !== WebSocket.OPEN) {
-            console.log("WebSocket not open yet");
-            return;
-        }
+            function startHostTimer(timeLimit) {
+                if (hostTimerInterval) clearInterval(hostTimerInterval);
+                let timeLeft = timeLimit;
+                const display = document.getElementById("timerDisplay");
+                hostTimerInterval = setInterval(() => {
+                    timeLeft--;
+                    if (display) display.innerText = timeLeft;
+                    if (timeLeft <= 0) clearInterval(hostTimerInterval);
+                }, 1000);
+            }
 
-        console.log("START GAME CLICK");
-        socket.send(JSON.stringify({ type: "start_game" }));
-    };
+            window.nextPhase = function () {
+                socket.send(JSON.stringify({ type: "next_phase", current_phase: currentPhase }));
+            };
 
-    window.onStartClick = function () {
-        if (!playersInLobby || playersInLobby.length < 1) {
-            alert("Недостатня кількість гравців для початку (мінімальна кількість 1)");
-            return;
-        }
+            window.skipQuestion = function () {
+                socket.send(JSON.stringify({ type: "skip_question" }));
+            };
 
-        startGame();
-        console.log("GAME STARTED");
-    };
+            socket.onclose = () => console.log("WebSocket CLOSED");
+            socket.onerror = (e) => console.error("WebSocket ERROR", e);
 
-    window.kickPlayer = function (playerName) {
-        if(!socket || socket.readyState !== WebSocket.OPEN) {
-            console.log("WebSocket not open yet");
-            return;
-        }
+            // Функція старту гри (глобальна)
+            window.startGame = function () {
+                if (!socket || socket.readyState !== WebSocket.OPEN) {
+                    console.log("WebSocket not open yet");
+                    return;
+                }
 
-        socket.send(JSON.stringify({
-            type: "kick_player",
-            player_name: playerName
-        }));
-    };
-});
-</script>
+                console.log("START GAME CLICK");
+                socket.send(JSON.stringify({ type: "start_game" }));
+            };
+
+            window.onStartClick = function () {
+                if (!playersInLobby || playersInLobby.length < 1) {
+                    alert("Недостатня кількість гравців для початку (мінімальна кількість 1)");
+                    return;
+                }
+
+                startGame();
+                console.log("GAME STARTED");
+            };
+
+            window.kickPlayer = function (playerName) {
+                if (!socket || socket.readyState !== WebSocket.OPEN) {
+                    console.log("WebSocket not open yet");
+                    return;
+                }
+
+                socket.send(JSON.stringify({
+                    type: "kick_player",
+                    player_name: playerName
+                }));
+            };
+
+            window.disbandLobby = function () {
+                if (confirm("Ви впевнені, що хочете розпустити лоббі?")) {
+                    socket.send(JSON.stringify({ type: "disband_lobby" }));
+                }
+            };
+        });
+    </script>
 </body>
+
 </html>

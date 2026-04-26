@@ -3,172 +3,196 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Kahoot-remake{% endblock %}</title>
+    <title>Створити вікторину - Kahoot-remake</title>
     <link rel="icon" type="image/ico+xml" href="https://assets-cdn.kahoot.it/controller/v2/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #8a2be2;
+            --secondary: #ff69b4;
+            --accent: #00d4ff;
+            --bg-dark: rgba(20, 20, 20, 0.8);
+        }
+
         body {
             margin: 0;
             min-height: 100vh;
-            background-image: url("{% static 'Home_bg.png' %}");
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("{% static 'Home_bg.png' %}");
             background-size: cover;
             background-position: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-attachment: fixed;
+            font-family: 'Outfit', sans-serif;
             color: white;
-            padding: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
 
         .container {
-            max-width: 600px;
+            max-width: 550px;
             width: 100%;
+            animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .form-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 30px;
+            padding: 50px 40px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
         }
 
         .form-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+        }
+
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            box-shadow: 0 10px 20px rgba(138, 43, 226, 0.3);
+            transform: rotate(-5deg);
         }
 
         .form-header h1 {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             margin: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-weight: 700;
+            letter-spacing: -1px;
+            color: #fff;
+        }
+
+        .form-header p {
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 10px;
+            font-size: 1.1rem;
         }
 
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
 
         .form-label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #fff;
             font-size: 1rem;
+            letter-spacing: 0.5px;
         }
 
         .form-input {
             width: 100%;
-            padding: 15px 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.95);
-            color: #333;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            padding: 16px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            font-size: 1.1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-sizing: border-box;
             font-family: inherit;
         }
 
         .form-input:focus {
             outline: none;
-            border-color: #667eea;
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-            transform: translateY(-1px);
-        }
-
-        .form-input::placeholder {
-            color: #999;
-            font-style: italic;
+            border-color: var(--accent);
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+            transform: scale(1.02);
         }
 
         .form-textarea {
-            resize: vertical;
-            min-height: 100px;
+            resize: none;
+            min-height: 120px;
+            line-height: 1.5;
         }
 
         .error-message {
-            color: #ff6b6b;
+            color: #ff4d4d;
             font-size: 0.9rem;
-            margin-top: 5px;
-            display: block;
+            margin-top: 8px;
+            font-weight: 500;
         }
 
         .form-actions {
             display: flex;
             gap: 15px;
-            margin-top: 30px;
+            margin-top: 40px;
+            justify-content: center;
         }
 
         .btn {
-            padding: 15px 30px;
-            border-radius: 25px;
+            flex: 1;
+            padding: 16px 25px;
+            border-radius: 18px;
             text-decoration: none;
-            font-weight: bold;
-            font-size: 1rem;
+            font-weight: 700;
+            font-size: 1.05rem;
             transition: all 0.3s ease;
-            display: inline-block;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
             border: none;
             cursor: pointer;
+            box-sizing: border-box;
+            white-space: nowrap;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            flex: 1;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(138, 43, 226, 0.4);
+            filter: brightness(1.1);
         }
 
         .btn-secondary {
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
         }
 
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            color: rgba(255, 255, 255, 0.7);
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-
-        .back-link:hover {
-            color: white;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-
+        @media (max-width: 480px) {
             .form-card {
-                padding: 30px 20px;
+                padding: 40px 20px;
             }
-
-            .form-header h1 {
-                font-size: 2rem;
-            }
-
-            .form-actions {
-                flex-direction: column;
-            }
+            .form-header h1 { font-size: 1.8rem; }
+            .form-actions { flex-direction: column; }
         }
     </style>
 </head>
@@ -176,31 +200,37 @@
     <div class="container">
         <div class="form-card">
             <div class="form-header">
+                <div class="icon-box">🧠</div>
                 <h1>Створити вікторину</h1>
+                <p>Налаштуйте параметри вашої нової гри</p>
             </div>
 
             <form method="post">
                 {% csrf_token %}
 
                 <div class="form-group">
-                    <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                    <label for="{{ form.title.id_for_label }}" class="form-label">Назва гри</label>
                     {{ form.title }}
                     {% if form.title.errors %}
-                        <span class="error-message">{{ form.title.errors.0 }}</span>
+                        <div class="error-message">⚠️ {{ form.title.errors.0 }}</div>
                     {% endif %}
                 </div>
 
                 <div class="form-group">
-                    <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                    <label for="{{ form.description.id_for_label }}" class="form-label">Опис</label>
                     {{ form.description }}
                     {% if form.description.errors %}
-                        <span class="error-message">{{ form.description.errors.0 }}</span>
+                        <div class="error-message">⚠️ {{ form.description.errors.0 }}</div>
                     {% endif %}
                 </div>
 
                 <div class="form-actions">
-                    <a href="{% url 'quiz_list' %}" class="btn btn-secondary">⬅️ Назад до списку</a>
-                    <button type="submit" class="btn btn-primary">✨ Створити вікторину</button>
+                    <button type="submit" class="btn btn-primary">
+                        <span>✨ Створити гру</span>
+                    </button>
+                    <a href="{% url 'quiz_list' %}" class="btn btn-secondary">
+                        <span>⬅️ Скасувати</span>
+                    </a>
                 </div>
             </form>
         </div>

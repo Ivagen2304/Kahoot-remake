@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="uk">
+
 <head>
     <meta charset="UTF-8">
     <title>Лоббі гравця - Kahoot-remake</title>
@@ -8,46 +9,67 @@
     <style>
         body {
             margin: 0;
-            height: 100vh;
-            background-image: url("{% static 'Home_bg.png' %}");
+            min-height: 100vh;
+            background-image: linear-gradient(rgba(0, 5, 25, 0.4), rgba(0, 5, 25, 0.4)), url("{% static 'Home_bg.png' %}");
             background-size: cover;
             background-position: center;
+            background-attachment: fixed;
             font-family: 'Nunito', Arial, sans-serif;
             color: white;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .lobby-container {
-            background-color: rgba(0, 0, 0, 0.514);
-            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 30px;
             padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.8),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.05);
             text-align: center;
             max-width: 600px;
             width: 90%;
             position: relative;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 1;
         }
 
         .lobby-container::before {
-            content: '';
+            content: "";
             position: absolute;
-            top: -5px;
-            left: -5px;
-            right: -5px;
-            bottom: -5px;
-            background: linear-gradient(45deg, #8a2be2, #764ba2, #ffffff71, #764ba2, #8a2be2);
-            border-radius: 25px;
+            inset: -4px;
+            border-radius: 34px;
+            padding: 4px;
+            background: linear-gradient(45deg, #8a2be2, #ff69b4, #ffffff71, #ff69b4, #8a2be2);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            background-size: 200% 200%;
+            animation: borderRotate 4s linear infinite;
             z-index: -1;
-            animation: gradientShift 3s ease infinite;
         }
 
-        @keyframes gradientShift {
+        @keyframes borderRotate {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
+        }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         h1 {
@@ -62,7 +84,7 @@
             font-weight: bold;
             color: #ff69b4;
             margin-bottom: 30px;
-            background-color: rgba(0, 180, 216, 0.1);
+            background-color: rgba(255, 255, 255, 0.1);
             padding: 15px 30px;
             border-radius: 15px;
             display: inline-block;
@@ -72,7 +94,7 @@
         .waiting-message {
             font-size: 24px;
             margin-bottom: 30px;
-            color: #ff69b4;
+            color: #8a2be2;
         }
 
         #question {
@@ -114,20 +136,30 @@
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="lobby-container">
         <h1>Лоббі гравця</h1>
         <div class="game-code">{{ session.code }}</div>
-        
+
         <!-- 👉 Стилізований лічильник гравців (тепер під кодом) -->
         <div style="margin-bottom: 30px;">
-            <div style="font-size: 18px; background: rgba(255, 255, 255, 0.1); display: inline-block; padding: 8px 25px; border-radius: 50px; border: 1px solid rgba(138, 43, 226, 0.3); color: #ff69b4; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            <div
+                style="font-size: 18px; background: rgba(255, 255, 255, 0.1); display: inline-block; padding: 8px 25px; border-radius: 50px; border: 1px solid rgba(138, 43, 226, 0.3); color: #ff69b4; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                 Гравців у лоббі: <span id="playerCount" style="color: white; font-size: 22px;">0</span>
             </div>
         </div>
@@ -137,81 +169,93 @@
         <div id="answers"></div>
     </div>
 
-<script>
-const code = "{{ session.code }}";
-let storedName = sessionStorage.getItem("player_name") || localStorage.getItem("player_name");
-const playerName = "{{ player_name|default:'' }}" || (storedName && storedName !== "null" ? storedName : null) || "Player";
-sessionStorage.setItem("player_name", playerName);
+    <script>
+        const code = "{{ session.code }}";
+        let storedName = sessionStorage.getItem("player_name") || localStorage.getItem("player_name");
+        const playerName = "{{ player_name|default:'' }}" || (storedName && storedName !== "null" ? storedName : null) || "Player";
+        sessionStorage.setItem("player_name", playerName);
 
-const socket = new WebSocket(
-    "ws://" + window.location.host +
-    "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName) + "&role=player"
-);
+        const socket = new WebSocket(
+            "ws://" + window.location.host +
+            "/ws/game/" + code + "/?name=" + encodeURIComponent(playerName) + "&role=player"
+        );
 
-socket.onopen = () =>
-console.log("WebSocket connected");
-socket.onerror = (e) =>
-console.error("WebSocket ERROR", e);
+        socket.onopen = () =>
+            console.log("WebSocket connected");
+        socket.onerror = (e) =>
+            console.error("WebSocket ERROR", e);
 
-socket.onmessage = function(event) {
-    const data = JSON.parse(event.data);
+        socket.onmessage = function (event) {
+            const data = JSON.parse(event.data);
 
-    if (data.type === "players") {
-        const playerCountSpan = document.getElementById("playerCount");
-        if (playerCountSpan) {
-            playerCountSpan.innerText = data.players.length;
-        }
-    }
+            if (data.type === "players") {
+                const playerCountSpan = document.getElementById("playerCount");
+                if (playerCountSpan) {
+                    playerCountSpan.innerText = data.players.length;
+                }
+            }
 
-    if (data.type === "show_question") {
-        // Скрываем сообщение ожидания
-        document.querySelector(".waiting-message").style.display = "none";
+            if (data.type === "lobby_disbanded") {
+                document.querySelector(".lobby-container").innerHTML = `
+            <h1 style="color: #ff69b4;">Лоббі розпущено</h1>
+            <div class="waiting-message">${data.message}</div>
+            <p style="font-size: 18px; opacity: 0.8;">Повернення на головну сторінку...</p>
+        `;
+                setTimeout(() => {
+                    window.location.href = "/";
+                }, 3000);
+            }
 
-        // Показываем вопрос
-        const questionDiv = document.getElementById("question");
-        questionDiv.innerText = data.question;
-        questionDiv.style.display = "block";
+            if (data.type === "show_question") {
+                // Скрываем сообщение ожидания
+                document.querySelector(".waiting-message").style.display = "none";
 
-        // Показываем варианты ответов
-        const answersDiv = document.getElementById("answers");
-        answersDiv.innerHTML = "";
+                // Показываем вопрос
+                const questionDiv = document.getElementById("question");
+                questionDiv.innerText = data.question;
+                questionDiv.style.display = "block";
 
-        data.options.forEach(option => {
-            const btn = document.createElement("button");
-            btn.innerText = option.text;
-            btn.className = "answer-btn";
-            btn.onclick = () => sendAnswer(option.id);
-            answersDiv.appendChild(btn);
-        });
+                // Показываем варианты ответов
+                const answersDiv = document.getElementById("answers");
+                answersDiv.innerHTML = "";
 
-        // Показываем кнопки ответов
-        document.querySelectorAll(".answer-btn").forEach(btn => {
-            btn.style.display = "block";
-        });
-    }
+                data.options.forEach(option => {
+                    const btn = document.createElement("button");
+                    btn.innerText = option.text;
+                    btn.className = "answer-btn";
+                    btn.onclick = () => sendAnswer(option.id);
+                    answersDiv.appendChild(btn);
+                });
 
-    if (data.type === "redirect") {
-        window.location.href = data.url;
-    }
+                // Показываем кнопки ответов
+                document.querySelectorAll(".answer-btn").forEach(btn => {
+                    btn.style.display = "block";
+                });
+            }
 
-    if (data.type === "kicked") {
-        document.querySelector(".lobby-container").innerHTML = `
+            if (data.type === "redirect") {
+                window.location.href = data.url;
+            }
+
+            if (data.type === "kicked") {
+                document.querySelector(".lobby-container").innerHTML = `
             <h1 style="color: #ff69b4;">Вас вигнали</h1>
             <div class="waiting-message">${data.message}</div>
             <p style="font-size: 18px; opacity: 0.8;">Повернення на головну сторінку через 3 секунди...</p>
         `;
-        setTimeout(() => {
-            window.location.href = "/";
-        }, 3000);
-    }
-};
+                setTimeout(() => {
+                    window.location.href = "/";
+                }, 3000);
+            }
+        };
 
-function sendAnswer(optionId) {
-    socket.send(JSON.stringify({
-        type: "answer",
-        option_id: optionId
-    }));
-}
-</script>
+        function sendAnswer(optionId) {
+            socket.send(JSON.stringify({
+                type: "answer",
+                option_id: optionId
+            }));
+        }
+    </script>
 </body>
+
 </html>

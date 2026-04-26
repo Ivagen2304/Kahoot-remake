@@ -8,9 +8,11 @@
     <style>
         body {
             margin: 0;
-            height: 100vh;
-            background-image: url("{% static 'Home_bg.png' %}");
+            min-height: 100vh;
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("{% static 'Home_bg.png' %}");
             background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             display: flex;
             justify-content: center;
             align-items: center;

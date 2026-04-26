@@ -15,8 +15,16 @@ class Quiz(models.Model):
 
 class Question(models.Model):
     """Питання у вікторині"""
+    QUESTION_TYPES = [
+        ('multiple_choice', 'Вибір варіанта'),
+        ('true_false', 'Правда/Брехня'),
+        ('puzzle', 'Пазл (Порядок)'),
+        ('text_input', 'Ввід тексту'),
+    ]
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="questions")
     text = models.CharField(max_length=500)
+    image = models.ImageField(upload_to='questions/', blank=True, null=True)
+    question_type = models.CharField(max_length=20, choices=QUESTION_TYPES, default='multiple_choice')
     time_limit = models.IntegerField(default=20)  # сек на питання
 
     def __str__(self):
@@ -28,6 +36,7 @@ class AnswerOption(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="options")
     text = models.CharField(max_length=300)
     is_correct = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.text
@@ -50,9 +59,12 @@ class Player(models.Model):
     """Гравець, що приєднався через код"""
     session = models.ForeignKey(GameSession, on_delete=models.CASCADE, related_name="players")
     name = models.CharField(max_length=100)
+    avatar = models.CharField(max_length=200, default='top=shortFlat&eyes=default&mouth=default&clothing=shirtCrewNeck')
     current_answer = models.CharField(max_length=300, null=True, blank=True)
     correct_answers = models.IntegerField(default=0)
     channel_name = models.CharField(max_length=100, null=True, blank=True)
+    score = models.IntegerField(default=0)
+    streak = models.IntegerField(default=0)
 
     class Meta:
         unique_together = ('session', 'name')
@@ -67,6 +79,9 @@ class PlayerAnswer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     selected_option = models.ForeignKey(AnswerOption, on_delete=models.CASCADE, null=True)
     is_correct = models.BooleanField(default=False)
+    score_earned = models.IntegerField(default=0)
+    answer_text = models.TextField(null=True, blank=True) # Для тексту або JSON-послідовності
+    accuracy = models.FloatField(default=0.0) # Для пазлів (0.0 - 1.0)
     answered_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
